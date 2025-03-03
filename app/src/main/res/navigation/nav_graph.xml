@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/nav_home">
+
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="com.example.myapplication.MainFragment"
+        android:label="Home"
+        tools:layout="@layout/fragment_main" />
+
+    <fragment
+        android:id="@+id/nav_user"
+        android:label="User"
+        android:name="com.example.myapplication.personal_account.HomeFragment"
+        tools:layout="@layout/fragment_home" />
+
+    <fragment
+        android:id="@+id/nav_reg"
+        android:label="Registration"
+        android:name="com.example.myapplication.registration.RegistrationFragment"
+        tools:layout="@layout/fragment_reg" />
+    <fragment
+        android:id="@+id/nav_drop"
+        android:label="Water"
+        android:name="com.example.myapplication.drop.DropFragment"
+        tools:layout="@layout/fragment_drop" />
+    <fragment
+        android:id="@+id/nav_step"
+        android:label="Steps"
+        android:name="com.example.myapplication.step.StepFragment"
+        tools:layout="@layout/fragment_steps" />
+    <fragment
+        android:label="Food"
+        android:id="@+id/nav_food"
+        android:name="com.example.myapplication.food.FoodFragment"
+        tools:layout="@layout/fragment_food" />
+
+</navigation>

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/textViewName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:gravity="center"
+        android:text="Добро пожаловать!"
+        android:textColor="#898989"
+        android:textSize="32sp" />
+
+    <EditText
+        android:id="@+id/editEmail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/edit_text_background"
+        android:hint="Email"
+        android:inputType="textEmailAddress"
+        android:padding="15dp"
+        android:textColor="#B6B6B6"
+        android:textColorHint="#B6B6B6" />
+
+    <EditText
+        android:id="@+id/editTextNameReg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/edit_text_background"
+        android:hint="Имя"
+        android:inputType="textPersonName"
+        android:padding="15dp"
+        android:textColor="#B6B6B6"
+        android:textColorHint="#B6B6B6" />
+
+    <Spinner
+        android:id="@+id/spinnerGender"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/edit_text_background"
+        android:padding="15dp" />
+
+    <EditText
+        android:id="@+id/editTextAge"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/edit_text_background"
+        android:hint="Возраст, лет"
+        android:inputType="number"
+        android:padding="15dp"
+        android:textColor="#B6B6B6"
+        android:textColorHint="#B6B6B6" />
+
+    <EditText
+        android:id="@+id/editTextWeight"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/edit_text_background"
+        android:hint="Вес, кг"
+        android:inputType="numberDecimal"
+        android:padding="15dp"
+        android:textColor="#B6B6B6"
+        android:textColorHint="#B6B6B6" />
+
+    <EditText
+        android:id="@+id/editTextHeight"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/edit_text_background"
+        android:hint="Рост, см"
+        android:inputType="number"
+        android:padding="15dp"
+        android:textColor="#B6B6B6"
+        android:textColorHint="#B6B6B6" />
+
+    <EditText
+        android:id="@+id/editTextGoalWeight"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/edit_text_background"
+        android:hint="Цель, кг"
+        android:inputType="numberDecimal"
+        android:padding="15dp"
+        android:textColor="#B6B6B6"
+        android:textColorHint="#B6B6B6" />
+
+    <Button
+        android:id="@+id/buttonSubmit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="15dp"
+        android:text="Войти" />
+
+</LinearLayout>

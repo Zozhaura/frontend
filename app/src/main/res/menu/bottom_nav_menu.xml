@@ -1,15 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/nav_home"
-        android:icon="@drawable/user"
+        android:id="@+id/nav_user"
+        android:icon="@navigation/user"
         android:title="" />
     <item
-        android:id="@+id/nav_sleep"
-        android:icon="@drawable/sleep"
+        android:id="@+id/nav_reg"
+        android:icon="@navigation/flag"
         android:title="" />
-<!--    <item-->
-<!--        android:id="@+id/nav_steps"-->
-<!--        android:icon="@drawable/ic_steps"-->
-<!--        android:title="Шаги" />-->
 </menu>

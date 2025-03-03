@@ -13,7 +13,7 @@
         android:layout_marginBottom="24dp">
 
         <com.mikhaellopez.circularprogressbar.CircularProgressBar
-            android:id="@+id/progressSteps"
+            android:id="@+id/progressWater"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:cpb_background_progressbar_color="@color/gray"
@@ -29,7 +29,7 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/textSteps"
+                android:id="@+id/textWater"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
@@ -38,7 +38,7 @@
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/textStepsLeft"
+                android:id="@+id/textWaterLeft"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -48,27 +48,18 @@
         </LinearLayout>
     </FrameLayout>
 
-    <TextView
-        android:id="@+id/textCaloriesBurned"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
-        android:text="Калорий потрачено:"
-        android:textColor="#9AFFFFFF"
-        android:textSize="18sp" />
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/edit_text_background"
-        android:orientation="vertical"
         android:gravity="center"
+        android:orientation="vertical"
         android:padding="16dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Выберите цель"
+            android:text="Выберите объем порции"
             android:textColor="#9AFFFFFF"
             android:textSize="18sp" />
 
@@ -81,52 +72,52 @@
             android:rowCount="2">
 
             <Button
-                android:id="@+id/button4000"
+                android:id="@+id/button50ml"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
                 android:layout_margin="8dp"
-                android:text="4000" />
+                android:text="50 мл" />
 
             <Button
-                android:id="@+id/button8000"
+                android:id="@+id/button150ml"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
                 android:layout_margin="8dp"
-                android:text="8000" />
+                android:text="150 мл" />
 
             <Button
-                android:id="@+id/button12000"
+                android:id="@+id/button250ml"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
                 android:layout_margin="8dp"
-                android:text="12000" />
+                android:text="250 мл" />
 
             <Button
-                android:id="@+id/button6000"
+                android:id="@+id/button100ml"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
                 android:layout_margin="8dp"
-                android:text="6000" />
+                android:text="100 мл" />
 
             <Button
-                android:id="@+id/button10000"
+                android:id="@+id/button200ml"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
                 android:layout_margin="8dp"
-                android:text="10000" />
+                android:text="200 мл" />
 
             <Button
-                android:id="@+id/button15000"
+                android:id="@+id/button300ml"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
                 android:layout_margin="8dp"
-                android:text="15000" />
+                android:text="300 мл" />
         </GridLayout>
     </LinearLayout>
 </LinearLayout>
