@@ -1,5 +1,7 @@
 package com.example.myapplication
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
 import androidx.compose.material3.*
@@ -13,6 +15,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.myapplication.navigation.AppNavigation
 import com.example.myapplication.navigation.BottomNavigation
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppScreen() {
@@ -27,7 +30,7 @@ fun AppScreen() {
                         title = { Text("Главная") }
                     )
                 }
-                "profile", "registration", "drop", "step", "food"-> {
+                "profile", "registration", "drop", "step", "food", "calendar"-> {
                     TopAppBar(
                         title = { Text(currentRoute?.replaceFirstChar { it.uppercase() } ?: "") },
                         navigationIcon = {
