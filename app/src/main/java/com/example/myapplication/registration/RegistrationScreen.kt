@@ -15,12 +15,14 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
-fun RegistrationScreen() {
+fun RegistrationScreen(registrationViewModel: RegistrationViewModel = viewModel()) {
     val context = LocalContext.current
 
     var email by rememberSaveable { mutableStateOf("") }
+    var password by rememberSaveable { mutableStateOf("") }
     var name by rememberSaveable { mutableStateOf("") }
     var age by rememberSaveable { mutableStateOf("") }
     var weight by rememberSaveable { mutableStateOf("") }
@@ -43,12 +45,26 @@ fun RegistrationScreen() {
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        RegistrationInputField(value = email, onValueChange = { email = it }, label = "Email", keyboardType = KeyboardType.Email)
-        RegistrationInputField(value = name, onValueChange = { name = it }, label = "Имя")
+        RegistrationInputField(
+            value = email,
+            onValueChange = { email = it },
+            label = "Email",
+            keyboardType = KeyboardType.Email
+        )
+        RegistrationInputField(
+            value = password,
+            onValueChange = { password = it },
+            label = "Пароль",
+            keyboardType = KeyboardType.Password
+        )
+        RegistrationInputField(
+            value = name,
+            onValueChange = { name = it },
+            label = "Имя"
+        )
 
         Row(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
@@ -59,18 +75,55 @@ fun RegistrationScreen() {
             )
         }
 
-        RegistrationInputField(value = age, onValueChange = { age = it }, label = "Возраст, лет", keyboardType = KeyboardType.Number)
-        RegistrationInputField(value = weight, onValueChange = { weight = it }, label = "Вес, кг", keyboardType = KeyboardType.Number)
-        RegistrationInputField(value = height, onValueChange = { height = it }, label = "Рост, см", keyboardType = KeyboardType.Number)
-        RegistrationInputField(value = goalWeight, onValueChange = { goalWeight = it }, label = "Цель, кг", keyboardType = KeyboardType.Number)
+        RegistrationInputField(
+            value = age,
+            onValueChange = { age = it },
+            label = "Возраст, лет",
+            keyboardType = KeyboardType.Number
+        )
+        RegistrationInputField(
+            value = weight,
+            onValueChange = { weight = it },
+            label = "Вес, кг",
+            keyboardType = KeyboardType.Number
+        )
+        RegistrationInputField(
+            value = height,
+            onValueChange = { height = it },
+            label = "Рост, см",
+            keyboardType = KeyboardType.Number
+        )
+        RegistrationInputField(
+            value = goalWeight,
+            onValueChange = { goalWeight = it },
+            label = "Цель, кг",
+            keyboardType = KeyboardType.Number
+        )
 
         Button(
             onClick = {
-                Toast.makeText(context, "клик", Toast.LENGTH_SHORT).show()
+                println("Кнопка 'Зарегистрироваться' нажата")
+                registrationViewModel.registerUser(
+                    username = email,
+                    password = password,
+                    name = name,
+                    height = height.toDoubleOrNull() ?: 0.0,
+                    weight = weight.toDoubleOrNull() ?: 0.0,
+                    gender = selectedGender ?: "",
+                    goalWeight = goalWeight.toDoubleOrNull() ?: 0.0,
+                    onSuccess = { response ->
+                        println("Регистрация успешна, ответ: $response")
+                        Toast.makeText(context, "Регистрация успешна: $response", Toast.LENGTH_LONG).show()
+                    },
+                    onError = { error ->
+                        println("Ошибка регистрации: $error")
+                        Toast.makeText(context, "Ошибка регистрации: $error", Toast.LENGTH_LONG).show()
+                    }
+                )
             },
             modifier = Modifier.padding(top = 16.dp)
         ) {
-            Text(text = "Войти", color = MaterialTheme.colorScheme.inversePrimary)
+            Text(text = "Зарегистрироваться", color = MaterialTheme.colorScheme.inversePrimary)
         }
     }
 }
@@ -90,7 +143,7 @@ fun RegistrationInputField(
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 8.dp),
+            .padding(bottom = 8.dp)
     )
 }
 
