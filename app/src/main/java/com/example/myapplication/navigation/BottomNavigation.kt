@@ -26,5 +26,10 @@ fun BottomNavigation(navController: NavHostController) {
             onClick = { navController.navigate("calendar") },
             icon = { Icon(painterResource(id = R.drawable.calendar), contentDescription = "Calendar") }
         )
+        NavigationBarItem(
+            selected = false,
+            onClick = { navController.navigate("pulse") },
+            icon = { Icon(painterResource(id = R.drawable.heart), contentDescription = "Pulse") }
+        )
     }
 }

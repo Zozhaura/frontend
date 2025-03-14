@@ -30,7 +30,33 @@ fun AppScreen() {
                         title = { Text("Главная") }
                     )
                 }
-                "profile", "registration", "drop", "step", "food", "calendar"-> {
+                "pulse" -> {
+                    TopAppBar(
+                        title = { Text("Pulse") },
+                        navigationIcon = {
+                            IconButton(onClick = { navController.navigate("home") }) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.arrow_back),
+                                    contentDescription = "Back"
+                                )
+                            }
+                        }
+                    )
+                }
+                "vitamin" -> {
+                    TopAppBar(
+                        title = { Text("Vitamins") },
+                        navigationIcon = {
+                            IconButton(onClick = { navController.navigate("pulse") }) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.arrow_back),
+                                    contentDescription = "Back"
+                                )
+                            }
+                        }
+                    )
+                }
+                else -> {
                     TopAppBar(
                         title = { Text(currentRoute?.replaceFirstChar { it.uppercase() } ?: "") },
                         navigationIcon = {
