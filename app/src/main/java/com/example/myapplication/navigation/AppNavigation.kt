@@ -11,8 +11,10 @@ import com.example.myapplication.calendar.CalendarScreen
 import com.example.myapplication.drop.DropScreen
 import com.example.myapplication.food.FoodScreen
 import com.example.myapplication.profile.ProfileScreen
+import com.example.myapplication.pulse.PulseScreen
 import com.example.myapplication.registration.RegistrationScreen
 import com.example.myapplication.step.StepScreen
+import com.example.myapplication.vitamin.VitaminScreen
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -24,9 +26,11 @@ fun AppNavigation(navController: NavHostController) {
         composable("home") { HomeScreen(navController) }
         composable("profile") { ProfileScreen() }
         composable("registration") { RegistrationScreen() }
-        composable("drop"){ DropScreen() }
+        composable("drop") { DropScreen() }
         composable("step") { StepScreen() }
         composable("food") { FoodScreen() }
-        composable("calendar") {CalendarScreen()}
+        composable("calendar") { CalendarScreen() }
+        composable("pulse") { PulseScreen(navController) }
+        composable("vitamin") { VitaminScreen() }
     }
 }
