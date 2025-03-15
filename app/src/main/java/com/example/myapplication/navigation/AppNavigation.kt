@@ -13,6 +13,7 @@ import com.example.myapplication.food.FoodScreen
 import com.example.myapplication.profile.ProfileScreen
 import com.example.myapplication.pulse.PulseScreen
 import com.example.myapplication.registration.RegistrationScreen
+import com.example.myapplication.sleep.SleepScreen
 import com.example.myapplication.step.StepScreen
 import com.example.myapplication.vitamin.VitaminScreen
 
@@ -32,5 +33,6 @@ fun AppNavigation(navController: NavHostController) {
         composable("calendar") { CalendarScreen() }
         composable("pulse") { PulseScreen(navController) }
         composable("vitamin") { VitaminScreen() }
+        composable("sleep") { SleepScreen() }
     }
 }
