@@ -1,4 +1,4 @@
-package com.example.myapplication.step
+package com.example.myapplication.utils
 
 import android.util.Log
 import io.ktor.client.*
@@ -9,45 +9,42 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
-object CaloriesWebSocketManager {
-
-    private val client = HttpClient(OkHttp) {
+abstract class BaseWebSocketManager<T>(
+    private val clientName: String = "BaseWS"
+) {
+    protected val client = HttpClient(OkHttp) {
         install(WebSockets)
     }
 
     private var session: DefaultWebSocketSession? = null
-
-    private val _caloriesFlow = MutableSharedFlow<Int>(replay = 1)
-    val caloriesFlow = _caloriesFlow.asSharedFlow()
-
     private var job: Job? = null
+
+    protected val _dataFlow = MutableSharedFlow<T>(replay = 1)
+    val dataFlow = _dataFlow.asSharedFlow()
 
     fun connect(url: String) {
         if (job?.isActive == true) return
-
-        Log.d("CaloriesWS", "Attempting to connect to $url")
+        Log.d(clientName, "Attempting to connect to $url")
         job = CoroutineScope(Dispatchers.IO).launch {
             try {
                 client.webSocket(urlString = url) {
                     session = this
-                    Log.d("CaloriesWS", "Connected to $url")
+                    Log.d(clientName, "Connected to $url")
                     for (frame in incoming) {
                         if (frame is Frame.Text) {
-                            val text = frame.readText()
-                            Log.d("CaloriesWS", "Received message: $text")
-                            val calories = text.toIntOrNull() ?: 0
-                            _caloriesFlow.emit(calories)
+                            processFrame(frame.readText())
                         }
                     }
                 }
             } catch (e: Exception) {
-                Log.e("CaloriesWS", "Error connecting to $url: ${e.message}", e)
+                Log.e(clientName, "Error connecting to $url: ${e.message}", e)
             }
         }
     }
+    protected abstract suspend fun processFrame(message: String)
 
     fun close() {
-        Log.d("CaloriesWS", "Closing connection")
+        Log.d(clientName, "Closing connection")
         job?.cancel()
         job = null
         session?.cancel()

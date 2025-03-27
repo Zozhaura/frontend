@@ -1,4 +1,4 @@
-package com.example.myapplication.registration
+ package com.example.myapplication.registration
 
 import android.widget.Toast
 import androidx.compose.foundation.border
@@ -16,9 +16,15 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import com.example.myapplication.profile.ProfileViewModel
+import com.example.myapplication.utils.TokenManager
 
 @Composable
-fun RegistrationScreen(registrationViewModel: RegistrationViewModel = viewModel()) {
+fun RegistrationScreen(
+    navController: NavController,
+    registrationViewModel: RegistrationViewModel = viewModel(),
+    profileViewModel: ProfileViewModel = viewModel()) {
     val context = LocalContext.current
 
     var email by rememberSaveable { mutableStateOf("") }
@@ -99,7 +105,6 @@ fun RegistrationScreen(registrationViewModel: RegistrationViewModel = viewModel(
             label = "Цель, кг",
             keyboardType = KeyboardType.Number
         )
-
         Button(
             onClick = {
                 println("Кнопка 'Зарегистрироваться' нажата")
@@ -111,9 +116,17 @@ fun RegistrationScreen(registrationViewModel: RegistrationViewModel = viewModel(
                     weight = weight.toDoubleOrNull() ?: 0.0,
                     gender = selectedGender ?: "",
                     goalWeight = goalWeight.toDoubleOrNull() ?: 0.0,
-                    onSuccess = { response ->
-                        println("Регистрация успешна, ответ: $response")
-                        Toast.makeText(context, "Регистрация успешна: $response", Toast.LENGTH_LONG).show()
+                    onSuccess = { token ->
+                        if (token.isNotEmpty()) {
+                            TokenManager.saveToken(context, token)
+                            Toast.makeText(context, "Регистрация успешна", Toast.LENGTH_LONG).show()
+                            profileViewModel.fetchUserInfo(context)
+                            navController.navigate("home") {
+                                popUpTo("registration") { inclusive = true }
+                            }
+                        } else {
+                            Toast.makeText(context, "Не удалось получить токен", Toast.LENGTH_LONG).show()
+                        }
                     },
                     onError = { error ->
                         println("Ошибка регистрации: $error")
@@ -121,10 +134,30 @@ fun RegistrationScreen(registrationViewModel: RegistrationViewModel = viewModel(
                     }
                 )
             },
-            modifier = Modifier.padding(top = 16.dp)
+            modifier = Modifier
+                .padding(top = 16.dp)
+                .fillMaxWidth()
         ) {
             Text(text = "Зарегистрироваться", color = MaterialTheme.colorScheme.inversePrimary)
         }
+
+
+        TextButton(
+            onClick = {
+                navController.navigate("login")
+            },
+            modifier = Modifier
+                .padding(top = 8.dp)
+                .align(Alignment.CenterHorizontally)
+        ) {
+            Text(
+                text = "Уже есть аккаунт? Войти",
+                color = MaterialTheme.colorScheme.inversePrimary,
+                fontSize = 16.sp
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
     }
 }
 

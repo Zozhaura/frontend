@@ -1,6 +1,5 @@
- package com.example.myapplication.registration
+package com.example.myapplication.login
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.ktor.client.*
@@ -16,20 +15,12 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
 @Serializable
-data class AuthRequest(
-    val username: String,
-    val password: String,
-    val name: String,
-    val height: Double,
-    val weight: Double,
-    val gender: String,
-    val goalWeight: Double
-)
+data class LoginRequest(val username: String, val password: String)
 
 @Serializable
 data class AuthResponse(val token: String)
 
-class RegistrationViewModel : ViewModel() {
+class LoginViewModel : ViewModel() {
     private val client = HttpClient(OkHttp) {
         install(ContentNegotiation) {
             json(Json {
@@ -39,44 +30,28 @@ class RegistrationViewModel : ViewModel() {
         }
     }
 
-    fun registerUser(
+    fun loginUser(
         username: String,
         password: String,
-        name: String,
-        height: Double,
-        weight: Double,
-        gender: String,
-        goalWeight: Double,
         onSuccess: (String) -> Unit,
         onError: (String) -> Unit
     ) {
-        val request = AuthRequest(
-            username = username,
-            password = password,
-            name = name,
-            height = height,
-            weight = weight,
-            gender = gender,
-            goalWeight = goalWeight
-        )
+        val request = LoginRequest(username, password)
         viewModelScope.launch {
             try {
-                val response = client.post("http://10.0.2.2:8080/auth/register") {
+                val response = client.post("http://10.0.2.2:8080/auth/login") {
                     contentType(ContentType.Application.Json)
                     setBody(request)
                 }.bodyAsText()
+
                 val authResponse = Json.decodeFromString<AuthResponse>(response)
-                if (authResponse.token.isNotEmpty()) {
-                    onSuccess(authResponse.token)
-                } else {
-                    onError("Token is empty")
-                }
+                onSuccess(authResponse.token)
             } catch (e: Exception) {
-                Log.e("RegistrationVM", "Ошибка регистрации: ${e.message}", e)
                 onError(e.message ?: "Unknown error")
             }
         }
     }
+
     override fun onCleared() {
         super.onCleared()
         client.close()

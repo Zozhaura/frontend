@@ -1,5 +1,6 @@
-package com.example.myapplication.profile
+ package com.example.myapplication.profile
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -7,12 +8,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -20,22 +21,54 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.myapplication.R
+import com.example.myapplication.utils.TokenManager
 
 object AppColors {
     val GrayText = Color(0xFF898989)
     val LightGray = Color.LightGray
 }
+
 object AppDimens {
     val ProfileImageSize = 200.dp
     val InputFontSize = 19.sp
     val ButtonPadding = 16.dp
 }
+
 @Composable
-fun ProfileScreen() {
-    var name by rememberSaveable { mutableStateOf("") }
-    var height by rememberSaveable { mutableStateOf("") }
-    var weight by rememberSaveable { mutableStateOf("") }
+fun ProfileScreen(
+    navController: NavController,
+    viewModel: ProfileViewModel = viewModel()
+) {
+    val context = LocalContext.current
+    val userResponse by remember { derivedStateOf { viewModel.userResponse } }
+    val errorMessage by remember { derivedStateOf { viewModel.errorMessage } }
+    var name by remember { mutableStateOf("") }
+    var height by remember { mutableStateOf("") }
+    var weight by remember { mutableStateOf("") }
+    LaunchedEffect(Unit) {
+        viewModel.fetchUserInfo(context)
+    }
+    LaunchedEffect(userResponse) {
+        userResponse?.let {
+            name = it.name
+            height = it.height.toString()
+            weight = it.weight.toString()
+        }
+    }
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            if (it.contains("Токен отсутствует")) {
+                navController.navigate("login") {
+                    popUpTo("profile") { inclusive = true }
+                }
+            }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -52,12 +85,22 @@ fun ProfileScreen() {
         ProfileInputField(value = height, onValueChange = { if (it.all { char -> char.isDigit() }) height = it }, label = "Введите рост", keyboardType = KeyboardType.Number)
         ProfileInputField(value = weight, onValueChange = { if (it.all { char -> char.isDigit() }) weight = it }, label = "Введите вес", keyboardType = KeyboardType.Number)
 
-//        Button(
-//            onClick = { },
-//            modifier = Modifier.padding(top = AppDimens.ButtonPadding)
-//        ) {
-//            Text("Сохранить")
-//        }
+        Spacer(modifier = Modifier.weight(1f))
+        Button(
+            onClick = {
+                TokenManager.clearToken(context)
+                Toast.makeText(context, "Вы вышли из аккаунта", Toast.LENGTH_SHORT).show()
+                navController.navigate("login") {
+                    popUpTo("profile") { inclusive = true }
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = AppDimens.ButtonPadding),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+        ) {
+            Text("Выйти из аккаунта", color = MaterialTheme.colorScheme.onError)
+        }
     }
 }
 

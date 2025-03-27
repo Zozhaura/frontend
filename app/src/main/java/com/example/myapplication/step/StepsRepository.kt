@@ -1,9 +1,10 @@
 package com.example.myapplication.step
 
-class StepsRepository {
 
-    val stepsFlow = StepsWebSocketManager.stepsFlow
-    val caloriesFlow = CaloriesWebSocketManager.caloriesFlow
+
+class StepsRepository {
+    val stepsFlow = StepsWebSocketManager.dataFlow
+    val caloriesFlow = CaloriesWebSocketManager.dataFlow
 
     fun connectSteps(url: String) {
         StepsWebSocketManager.connect(url)

@@ -9,7 +9,7 @@ import androidx.navigation.NavHostController
 import com.example.myapplication.HomeScreen
 import com.example.myapplication.calendar.CalendarScreen
 import com.example.myapplication.drop.DropScreen
-import com.example.myapplication.food.FoodScreen
+import com.example.myapplication.login.LoginScreen
 import com.example.myapplication.profile.ProfileScreen
 import com.example.myapplication.pulse.PulseScreen
 import com.example.myapplication.registration.RegistrationScreen
@@ -18,17 +18,17 @@ import com.example.myapplication.vitamin.VitaminScreen
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun AppNavigation(navController: NavHostController) {
+fun AppNavigation(navController: NavHostController, startDestination: String) {
     NavHost(
         navController = navController,
-        startDestination = "home"
+        startDestination = startDestination
     ) {
         composable("home") { HomeScreen(navController) }
-        composable("profile") { ProfileScreen() }
-        composable("registration") { RegistrationScreen() }
+        composable("profile") { ProfileScreen(navController) }
+        composable("registration") { RegistrationScreen(navController) }
+        composable("login") { LoginScreen(navController) }
         composable("drop") { DropScreen() }
         composable("step") { StepScreen() }
-        composable("food") { FoodScreen() }
         composable("calendar") { CalendarScreen() }
         composable("pulse") { PulseScreen(navController) }
         composable("vitamin") { VitaminScreen() }
