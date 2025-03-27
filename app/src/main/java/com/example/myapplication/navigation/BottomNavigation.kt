@@ -18,11 +18,6 @@ fun BottomNavigation(navController: NavHostController) {
         )
         NavigationBarItem(
             selected = false,
-            onClick = { navController.navigate("registration") },
-            icon = { Icon(painterResource(id = R.drawable.flag), contentDescription = "Register") }
-        )
-        NavigationBarItem(
-            selected = false,
             onClick = { navController.navigate("calendar") },
             icon = { Icon(painterResource(id = R.drawable.calendar), contentDescription = "Calendar") }
         )

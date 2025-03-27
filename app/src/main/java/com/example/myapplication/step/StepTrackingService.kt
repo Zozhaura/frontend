@@ -9,6 +9,8 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import com.example.myapplication.R
+import com.example.myapplication.pulse.PulseWebSocketManager
+
 
 class StepTrackingService : Service() {
 
