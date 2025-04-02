@@ -1,9 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.22"
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.25"
 }
-
 android {
     namespace = "com.example.myapplication"
     compileSdk = 35
@@ -38,8 +37,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.14"
-    }
+        kotlinCompilerExtensionVersion = "1.5.15"    }
 }
 
 dependencies {
