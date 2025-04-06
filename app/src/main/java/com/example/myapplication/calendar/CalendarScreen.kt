@@ -60,7 +60,7 @@ fun CalendarScreen() {
         }
 
         item {
-            StatisticsView(selectedDate.value, statistics.value ?: emptyMap())
+            StatisticsView(selectedDate.value, statistics.value)
         }
 
         item {
