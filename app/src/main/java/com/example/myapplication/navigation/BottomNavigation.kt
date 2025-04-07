@@ -26,5 +26,10 @@ fun BottomNavigation(navController: NavHostController) {
             onClick = { navController.navigate("pulse") },
             icon = { Icon(painterResource(id = R.drawable.heart), contentDescription = "Pulse") }
         )
+        NavigationBarItem(
+            selected = false,
+            onClick = { navController.navigate("sleep") },
+            icon = { Icon(painterResource(id = R.drawable.sleep), contentDescription = "Sleep") }
+        )
     }
 }

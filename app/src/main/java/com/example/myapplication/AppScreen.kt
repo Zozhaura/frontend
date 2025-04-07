@@ -74,6 +74,21 @@ fun AppScreen() {
                         }
                     )
                 }
+
+                "sleep" -> {
+                    TopAppBar(
+                        title = { Text("Sleep") },
+                        navigationIcon = {
+                            IconButton(onClick = { navController.navigate("home") }) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.arrow_back),
+                                    contentDescription = "Back"
+                                )
+                            }
+                        }
+                    )
+                }
+
                 else -> {
                     TopAppBar(
                         title = { Text(currentRoute?.replaceFirstChar { it.uppercase() } ?: "") },
