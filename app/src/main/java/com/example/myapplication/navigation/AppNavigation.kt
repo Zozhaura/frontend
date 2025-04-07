@@ -19,6 +19,7 @@ import com.example.myapplication.pulse.PulseScreen
 import com.example.myapplication.registration.RegistrationScreen
 import com.example.myapplication.step.StepScreen
 import com.example.myapplication.vitamin.VitaminScreen
+import com.example.myapplication.sleep.SleepScreen
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -36,6 +37,7 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
         composable("calendar") { CalendarScreen() }
         composable("pulse") { PulseScreen(navController) }
         composable("vitamin") { VitaminScreen() }
+        composable("sleep") { SleepScreen() }
         composable("food") {
             val foodViewModel: FoodViewModel = viewModel()
             FoodScreen(
