@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.NavHostController
 import com.example.myapplication.HomeScreen
 import com.example.myapplication.calendar.CalendarScreen
+import com.example.myapplication.diary.DiaryScreen
 import com.example.myapplication.drop.DropScreen
 import com.example.myapplication.food.FoodScreen
 import com.example.myapplication.food.FoodViewModel
@@ -38,6 +39,7 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
         composable("pulse") { PulseScreen(navController) }
         composable("vitamin") { VitaminScreen() }
         composable("sleep") { SleepScreen() }
+        composable("diary") { DiaryScreen(navController) }
         composable("food") {
             val foodViewModel: FoodViewModel = viewModel()
             FoodScreen(
