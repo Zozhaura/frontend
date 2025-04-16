@@ -1,19 +1,21 @@
- package com.example.myapplication.registration
+package com.example.myapplication.registration
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.ktor.client.*
-import io.ktor.client.engine.okhttp.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import java.net.ConnectException
 
 @Serializable
 data class AuthRequest(
@@ -72,11 +74,16 @@ class RegistrationViewModel : ViewModel() {
                     onError("Token is empty")
                 }
             } catch (e: Exception) {
-                Log.e("RegistrationVM", "Ошибка регистрации: ${e.message}", e)
-                onError(e.message ?: "Unknown error")
+                val errorMessage = when (e) {
+                    is ConnectException -> "Не удалось подключиться к серверу"
+                    else -> e.message ?: "Неизвестная ошибка"
+                }
+                Log.e("RegistrationVM", "Ошибка регистрации: $errorMessage", e)
+                onError(errorMessage)
             }
         }
     }
+
     override fun onCleared() {
         super.onCleared()
         client.close()
