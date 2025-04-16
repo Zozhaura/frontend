@@ -1,29 +1,54 @@
 package com.example.myapplication.sleep
 
+import android.content.Context
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.Canvas
-import androidx.compose.ui.graphics.drawscope.Stroke
-import kotlin.math.min
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlin.math.max
+import kotlin.math.min
 
 private val AccentColor = Color(0xFFFF6F42)
 private val SecondaryColor = Color(0xFFBDB2D9)
@@ -37,8 +62,22 @@ object SleepColors {
     val ErrorRed = Color(0xFFE53935)
 }
 
+data class SleepRecord(
+    val startTime: Long,
+    val endTime: Long,
+    val rating: Int,
+    val timestamp: Long = System.currentTimeMillis()
+)
+
 @Composable
 fun SleepScreen() {
+    val context = LocalContext.current
+    val gson = Gson()
+    val prefs = context.getSharedPreferences("SleepPrefs", Context.MODE_PRIVATE)
+    var sleepRecords by remember {
+        mutableStateOf(loadSleepRecords(prefs, gson))
+    }
+
     var selectedRating by remember { mutableStateOf(0) }
     var startTimeHours by remember { mutableStateOf("") }
     var startTimeMinutes by remember { mutableStateOf("") }
@@ -67,9 +106,7 @@ fun SleepScreen() {
     val progress = min(sleepDuration.totalMinutes.toFloat() / normalSleepDuration, 1f)
     val excessProgress = if (sleepDuration.totalMinutes > normalSleepDuration) {
         (sleepDuration.totalMinutes - normalSleepDuration).toFloat() / normalSleepDuration
-    } else {
-        0f
-    }
+    } else 0f
 
     Column(
         modifier = Modifier
@@ -93,75 +130,58 @@ fun SleepScreen() {
         CircularSleepProgress(
             sleepHours = sleepDuration.format(),
             progress = if (showResult) progress else 0f,
-            excessProgress = if (showResult) excessProgress else 0f
+            excessProgress = if (showResult) excessProgress else 0f,
+            qualityScore = if (showResult) calculatedRating else 0
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(SleepColors.DarkGray)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            TimeInputRow(
-                label = "Начало сна",
-                hours = startTimeHours,
-                minutes = startTimeMinutes,
-                onHoursChange = {
-                    if (it.isEmpty() || (it.toIntOrNull() ?: 0) <= 23) {
-                        startTimeHours = it
-                    }
-                },
-                onMinutesChange = {
-                    if (it.isEmpty() || (it.toIntOrNull() ?: 0) <= 59) {
-                        startTimeMinutes = it
-                    }
-                },
-                hoursError = startHoursError,
-                minutesError = startMinutesError
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            TimeInputRow(
-                label = "Конец сна",
-                hours = endTimeHours,
-                minutes = endTimeMinutes,
-                onHoursChange = {
-                    if (it.isEmpty() || (it.toIntOrNull() ?: 0) <= 23) {
-                        endTimeHours = it
-                    }
-                },
-                onMinutesChange = {
-                    if (it.isEmpty() || (it.toIntOrNull() ?: 0) <= 59) {
-                        endTimeMinutes = it
-                    }
-                },
-                hoursError = endHoursError,
-                minutesError = endMinutesError
-            )
-        }
+        TimeInputSection(
+            startTimeHours, startTimeMinutes, endTimeHours, endTimeMinutes,
+            onStartHoursChange = { if (it.isEmpty() || (it.toIntOrNull() ?: 0) <= 23) startTimeHours = it },
+            onStartMinutesChange = { if (it.isEmpty() || (it.toIntOrNull() ?: 0) <= 59) startTimeMinutes = it },
+            onEndHoursChange = { if (it.isEmpty() || (it.toIntOrNull() ?: 0) <= 23) endTimeHours = it },
+            onEndMinutesChange = { if (it.isEmpty() || (it.toIntOrNull() ?: 0) <= 59) endTimeMinutes = it },
+            startHoursError, startMinutesError, endHoursError, endMinutesError
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
             onClick = {
                 showErrors = true
-                if (selectedRating > 0 &&
-                    startTimeHours.isNotEmpty() && startTimeMinutes.isNotEmpty() &&
-                    endTimeHours.isNotEmpty() && endTimeMinutes.isNotEmpty() &&
-                    !startHoursError && !startMinutesError &&
-                    !endHoursError && !endMinutesError
-                ) {
+                if (isInputValid(selectedRating, startTimeHours, startTimeMinutes,
+                        endTimeHours, endTimeMinutes, startHoursError, startMinutesError,
+                        endHoursError, endMinutesError)) {
                     showResult = true
+                    val newRecord = SleepRecord(
+                        startTime = formatTimeForCalculation(startTimeHours, startTimeMinutes),
+                        endTime = formatTimeForCalculation(endTimeHours, endTimeMinutes),
+                        rating = selectedRating
+                    )
+                    sleepRecords = sleepRecords + newRecord
+                    saveSleepRecords(prefs, gson, sleepRecords)
+                    resetInputs {
+                        selectedRating = 0
+                        startTimeHours = ""
+                        startTimeMinutes = ""
+                        endTimeHours = ""
+                        endTimeMinutes = ""
+                        showResult = false
+                        showErrors = false
+                    }
                 }
             },
             colors = ButtonDefaults.buttonColors(containerColor = SleepColors.Orange)
         ) {
             Text("Добавить", color = Color.White)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        SleepHistory(sleepRecords) { record ->
+            sleepRecords = sleepRecords.filter { it != record }
+            saveSleepRecords(prefs, gson, sleepRecords)
         }
 
         if (showResult && isValid) {
@@ -199,52 +219,87 @@ fun SleepScreen() {
 }
 
 @Composable
+fun TimeInputSection(
+    startTimeHours: String, startTimeMinutes: String,
+    endTimeHours: String, endTimeMinutes: String,
+    onStartHoursChange: (String) -> Unit,
+    onStartMinutesChange: (String) -> Unit,
+    onEndHoursChange: (String) -> Unit,
+    onEndMinutesChange: (String) -> Unit,
+    startHoursError: Boolean,
+    startMinutesError: Boolean,
+    endHoursError: Boolean,
+    endMinutesError: Boolean
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(SleepColors.DarkGray)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        TimeInputRow("Начало сна", startTimeHours, startTimeMinutes,
+            onStartHoursChange, onStartMinutesChange, startHoursError, startMinutesError)
+        Spacer(modifier = Modifier.height(16.dp))
+        TimeInputRow("Конец сна", endTimeHours, endTimeMinutes,
+            onEndHoursChange, onEndMinutesChange, endHoursError, endMinutesError)
+    }
+}
+
+@Composable
 fun CircularSleepProgress(
     sleepHours: String,
     progress: Float,
-    excessProgress: Float
+    excessProgress: Float,
+    qualityScore: Int
 ) {
     Box(
         modifier = Modifier
-            .size(180.dp)
+            .size(200.dp)
             .padding(8.dp),
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
+            val strokeWidth = 20.dp.toPx()
             drawArc(
                 color = SecondaryColor.copy(alpha = 0.3f),
                 startAngle = -90f,
                 sweepAngle = 360f,
                 useCenter = false,
-                style = Stroke(width = 16.dp.toPx(), cap = StrokeCap.Round)
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
             )
 
             drawArc(
-                brush = Brush.linearGradient(colors = listOf(AccentColor, Color(0xFFFF9352))),
+                brush = Brush.linearGradient(listOf(AccentColor, Color(0xFFFF9352))),
                 startAngle = -90f,
                 sweepAngle = progress * 360f,
                 useCenter = false,
-                style = Stroke(width = 16.dp.toPx(), cap = StrokeCap.Round)
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
             )
+
             if (excessProgress > 0) {
                 drawArc(
                     color = ExcessColor,
                     startAngle = -90f + progress * 360f,
-                    sweepAngle = excessProgress * 360f,
+                    sweepAngle = min(excessProgress * 360f, 360f - progress * 360f),
                     useCenter = false,
-                    style = Stroke(width = 16.dp.toPx(), cap = StrokeCap.Round)
+                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
                 )
             }
         }
 
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = sleepHours,
-                color = Color.White,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Text(text = "часы сна", color = Color.Gray, fontSize = 14.sp)
+            Text(sleepHours, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Text("часы сна", color = Color.Gray, fontSize = 14.sp)
+            if (qualityScore > 0) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    "Качество: $qualityScore/10",
+                    color = SleepColors.LightGray,
+                    fontSize = 16.sp
+                )
+            }
         }
     }
 }
@@ -342,9 +397,7 @@ fun TimeTextField(
                     Modifier
                         .clip(RoundedCornerShape(10.dp))
                         .background(
-                            if (isError) SleepColors.ErrorRed.copy(alpha = 0.2f) else Color(
-                                0xFF494358
-                            )
+                            if (isError) SleepColors.ErrorRed.copy(alpha = 0.2f) else Color(0xFF494358)
                         )
                         .padding(vertical = 10.dp, horizontal = 12.dp)
                         .fillMaxWidth()
@@ -356,6 +409,40 @@ fun TimeTextField(
                 }
             }
         )
+    }
+}
+
+@Composable
+fun SleepHistory(records: List<SleepRecord>, onDelete: (SleepRecord) -> Unit) {
+    if (records.isNotEmpty()) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+        ) {
+            items(records.reversed()) { record ->
+                val (duration, _) = calculateSleepDuration(record.startTime, record.endTime)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "${duration.format()} (${record.rating}★)",
+                        color = SleepColors.LightGray
+                    )
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = "Delete",
+                        tint = ExcessColor,
+                        modifier = Modifier
+                            .clickable { onDelete(record) }
+                            .size(24.dp)
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -385,3 +472,29 @@ data class TimeDuration(val totalMinutes: Long) {
         return "${hours}ч ${"%02d".format(minutes)}м"
     }
 }
+
+private fun loadSleepRecords(prefs: android.content.SharedPreferences, gson: Gson): List<SleepRecord> {
+    val json = prefs.getString("sleep_records", null) ?: return emptyList()
+    val type = object : TypeToken<List<SleepRecord>>() {}.type
+    return gson.fromJson(json, type)
+}
+
+private fun saveSleepRecords(prefs: android.content.SharedPreferences, gson: Gson, records: List<SleepRecord>) {
+    with(prefs.edit()) {
+        putString("sleep_records", gson.toJson(records))
+        apply()
+    }
+}
+
+private fun isInputValid(
+    rating: Int, startHours: String, startMinutes: String,
+    endHours: String, endMinutes: String,
+    startHoursError: Boolean, startMinutesError: Boolean,
+    endHoursError: Boolean, endMinutesError: Boolean
+) = rating > 0 &&
+        startHours.isNotEmpty() && startMinutes.isNotEmpty() &&
+        endHours.isNotEmpty() && endMinutes.isNotEmpty() &&
+        !startHoursError && !startMinutesError &&
+        !endHoursError && !endMinutesError
+
+private fun resetInputs(block: () -> Unit) = block()

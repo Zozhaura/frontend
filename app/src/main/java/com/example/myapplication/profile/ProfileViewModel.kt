@@ -1,22 +1,23 @@
- package com.example.myapplication.profile
+package com.example.myapplication.profile
 
 import android.content.Context
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myapplication.utils.TokenManager
-import io.ktor.client.*
-import io.ktor.client.engine.okhttp.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
 @Serializable
@@ -45,15 +46,43 @@ class ProfileViewModel : ViewModel() {
     private val _errorMessage: MutableState<String?> = mutableStateOf(null)
     val errorMessage: String? get() = _errorMessage.value
 
-    fun fetchUserInfo(context: Context) {
-        val token = TokenManager.getToken(context)
-        if (token == null) {
-            _errorMessage.value = "Токен отсутствует. Пожалуйста, войдите снова."
-            return
+    private val _isLoading: MutableState<Boolean> = mutableStateOf(true)
+    val isLoading: Boolean get() = _isLoading.value
+    private fun saveUserToPrefs(context: Context, user: UserResponse) {
+        val prefs = context.getSharedPreferences("ProfilePrefs", Context.MODE_PRIVATE)
+        with(prefs.edit()) {
+            putString("user_json", Json.encodeToString(UserResponse.serializer(), user))
+            apply()
         }
-        Log.d("ProfileViewModel", "Извлеченный токен: $token")
+    }
 
+    private fun loadUserFromPrefs(context: Context): UserResponse? {
+        val prefs = context.getSharedPreferences("ProfilePrefs", Context.MODE_PRIVATE)
+        val json = prefs.getString("user_json", null) ?: return null
+        return try {
+            Json.decodeFromString<UserResponse>(json)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    fun fetchUserInfo(context: Context, forceRefresh: Boolean = false) {
         viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+            if (!forceRefresh && _userResponse.value == null) {
+                loadUserFromPrefs(context)?.let {
+                    _userResponse.value = it
+                }
+            }
+
+            val token = TokenManager.getToken(context)
+            if (token == null) {
+                _errorMessage.value = "Токен отсутствует. Пожалуйста, войдите снова."
+                _isLoading.value = false
+                return@launch
+            }
+
             try {
                 val httpResponse = client.get("http://10.0.2.2:8080/auth/userinfo") {
                     header("Authorization", "Bearer $token")
@@ -73,30 +102,27 @@ class ProfileViewModel : ViewModel() {
                         }.decodeFromString<UserResponse>(responseText)
 
                         _userResponse.value = response
+                        saveUserToPrefs(context, response)
                         _errorMessage.value = null
                     }
                     HttpStatusCode.Unauthorized -> {
-                        val errorText = httpResponse.bodyAsText()
-                        _errorMessage.value = "Ошибка авторизации: $errorText"
+                        _errorMessage.value = "Ошибка авторизации"
                         TokenManager.clearToken(context)
                     }
-                    HttpStatusCode.NotFound -> {
-                        val errorText = httpResponse.bodyAsText()
-                        _errorMessage.value = "Пользователь не найден: $errorText"
-                    }
                     else -> {
-                        val errorText = httpResponse.bodyAsText()
-                        _errorMessage.value = "Ошибка сервера: ${httpResponse.status} - $errorText"
+                        _errorMessage.value = "Ошибка сервера: ${httpResponse.status}"
                     }
                 }
             } catch (e: Exception) {
                 _errorMessage.value = "Ошибка загрузки данных: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
 
     override fun onCleared() {
-        super.onCleared()
         client.close()
+        super.onCleared()
     }
 }
