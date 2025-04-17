@@ -27,6 +27,7 @@ uiToolingPreview = "1.7.8"
 coil = "2.4.0"
 androidx-compose-material-icons-extended = "1.7.8"
 androidx-lifecycle = "2.8.7"
+foundationLayoutAndroid = "1.7.2"
 
 [libraries]
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
@@ -61,6 +62,7 @@ androidx-activity = { group = "androidx.activity", name = "activity", version.re
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 threetenabp = { module = "com.jakewharton.threetenabp:threetenabp", version.ref = "threetenabp" }
 ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
+androidx-foundation-layout-android = { group = "androidx.compose.foundation", name = "foundation-layout-android", version.ref = "foundationLayoutAndroid" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

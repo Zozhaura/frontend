@@ -40,4 +40,8 @@
     <string name="goal_weight_empty_error">Целевой вес не может быть пустым</string>
     <string name="goal_weight_invalid_error">Целевой вес должен быть числом</string>
     <string name="goal_weight_range_error">Целевой вес должен быть от 20 до 300 кг</string>
+    <string name="profile_update_success">Профиль успешно обновлен</string>
+    <string name="profile_update_error">Ошибка обновления профиля: %s</string>
+    <string name="name_too_long_error">Имя не должно превышать 50 символов</string>
+    <string name="logout_success">Вы вышли из аккаунта</string>
 </resources>

@@ -1,5 +1,8 @@
 package com.example.myapplication
 
+import android.widget.Toast
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,13 +23,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -45,6 +48,7 @@ object AppColors {
     val SemiTransparentWhite = Color(0x9AFFFFFF)
     val DarkGray = Color(0xFF3A3A3A)
     val Background = Color(0xFF494358)
+    val LoadingColor = Color(0xFF9575CD)
 }
 
 object AppDimens {
@@ -60,18 +64,16 @@ fun HomeScreen(
     viewModel: ProfileViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    val userResponse by remember { derivedStateOf { viewModel.userResponse } }
-    val errorMessage by remember { derivedStateOf { viewModel.errorMessage } }
-    val isLoading by remember { derivedStateOf { viewModel.isLoading } }
+    val userResponse by viewModel.userResponse
+    val errorMessage by viewModel.errorMessage
+    val isLoading by viewModel.isLoading
 
-    var height by remember { mutableStateOf(0) }
-    var weight by remember { mutableStateOf(0) }
-
-    val protein by remember { mutableStateOf("45/90 г") }
-    val fat by remember { mutableStateOf("24/48 г") }
-    val carbs by remember { mutableStateOf("62/125 г") }
-    val calories by remember { mutableStateOf("1300 ккал") }
-    val caloriesLeft by remember { mutableStateOf("800 ккал осталось") }
+    var height by remember { mutableStateOf<Double?>(null) }
+    var weight by remember { mutableStateOf<Double?>(null) }
+    var protein by remember { mutableStateOf(Pair(0.0, 0.0)) }
+    var fat by remember { mutableStateOf(Pair(0.0, 0.0)) }
+    var carbs by remember { mutableStateOf(Pair(0.0, 0.0)) }
+    var calories by remember { mutableStateOf(Pair(0.0, 0.0)) }
 
     LaunchedEffect(Unit) {
         viewModel.fetchUserInfo(context)
@@ -79,67 +81,130 @@ fun HomeScreen(
 
     LaunchedEffect(userResponse) {
         userResponse?.let {
-            weight = it.weight.toInt()
-            height = it.height.toInt()
+            height = it.height
+            weight = it.weight
+            protein = Pair(it.proteinCurrent, it.proteinTarget)
+            fat = Pair(it.fatCurrent, it.fatTarget)
+            carbs = Pair(it.carbsCurrent, it.carbsTarget)
+            calories = Pair(it.caloriesCurrent, it.caloriesTarget)
         }
     }
 
-    val bmi = calculateBMI(height, weight)
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            if (it.contains("Токен отсутствует") || it.contains("Ошибка авторизации")) {
+                navController.navigate("login") {
+                    popUpTo("home") { inclusive = true }
+                }
+            }
+        }
+    }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(
+                brush = Brush.radialGradient(
+                    colors = listOf(Color(0xFF45364c), Color(0xFF16101B), Color(0xFF2a1f33)),
+                    center = androidx.compose.ui.geometry.Offset(0.05f, 0.05f),
+                    radius = 1500f
+                )
+            )
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            MacroInfo("БЕЛКИ", protein, progressColor = AppColors.Orange)
-            MacroInfo("ЖИРЫ", fat, progressColor = AppColors.Orange)
-            MacroInfo("УГЛЕВОДЫ", carbs, progressColor = AppColors.Orange)
-        }
-        Spacer(modifier = Modifier.height(24.dp))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(250.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            ProgressCircle(calories, caloriesLeft, calculateProgress(calories))
-            IconButton(
-                iconRes = R.drawable.run,
-                onClick = { navController.navigate("step") },
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(16.dp)
+        if (isLoading && userResponse == null) {
+            CircularProgressIndicator(
+                color = AppColors.LoadingColor,
+                modifier = Modifier.align(Alignment.Center)
             )
-            IconButton(
-                iconRes = R.drawable.drop,
-                onClick = { navController.navigate("drop") },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp)
-            )
-        }
-        Spacer(modifier = Modifier.height(24.dp))
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            shape = RoundedCornerShape(16.dp),
-            color = AppColors.Background
-        ) {
+        } else {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
+                    .fillMaxSize()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                InfoCard("Текущий вес: $weight кг", R.drawable.pencil)
-                InfoCard("Текущий ИМТ: $bmi")
-                InfoCard("Добавить прием пищи", R.drawable.ic_add) {
-                    navController.navigate("food")
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    MacroInfo(
+                        label = "БЕЛКИ",
+                        current = protein.first,
+                        target = protein.second,
+                        progressColor = AppColors.Orange,
+                    )
+                    MacroInfo(
+                        label = "ЖИРЫ",
+                        current = fat.first,
+                        target = fat.second,
+                        progressColor = AppColors.Orange,
+                    )
+                    MacroInfo(
+                        label = "УГЛЕВОДЫ",
+                        current = carbs.first,
+                        target = carbs.second,
+                        progressColor = AppColors.Orange,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    ProgressCircle(
+                        currentCalories = calories.first,
+                        targetCalories = calories.second,
+                        onClick = { navController.navigate("macros/calories") }
+                    )
+                    IconButton(
+                        iconRes = R.drawable.run,
+                        onClick = { navController.navigate("step") },
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(16.dp)
+                    )
+                    IconButton(
+                        iconRes = R.drawable.drop,
+                        onClick = { navController.navigate("drop") },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(16.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    color = AppColors.Background
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        InfoCard(
+                            text = "Текущий вес: ${weight?.toInt() ?: "N/A"} кг",
+                            iconRes = R.drawable.pencil,
+                            onClick = { navController.navigate("profile") }
+                        )
+                        InfoCard(
+                            text = "Текущий ИМТ: ${calculateBMI(height, weight)}"
+                        )
+                        InfoCard(
+                            text = "Добавить прием пищи",
+                            iconRes = R.drawable.ic_add,
+                            onClick = { navController.navigate("food") }
+                        )
+                    }
                 }
             }
         }
@@ -147,10 +212,19 @@ fun HomeScreen(
 }
 
 @Composable
-fun MacroInfo(label: String, value: String, progressColor: Color) {
+fun MacroInfo(
+    label: String,
+    current: Double,
+    target: Double,
+    progressColor: Color,
+) {
+    val progress = calculateProgress(current, target)
+    val animatedProgress by animateFloatAsState(targetValue = progress)
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(120.dp)
+        modifier = Modifier
+            .width(120.dp)
     ) {
         Box(
             modifier = Modifier.size(AppDimens.MacroProgressBarSize),
@@ -160,24 +234,30 @@ fun MacroInfo(label: String, value: String, progressColor: Color) {
                 progress = { 1f },
                 modifier = Modifier.fillMaxSize(),
                 color = AppColors.LightGray,
-                strokeWidth = 4.dp,
+                strokeWidth = 4.dp
             )
             CircularProgressIndicator(
-                progress = { calculateProgress(value) },
+                progress = { animatedProgress },
                 modifier = Modifier.fillMaxSize(),
                 color = progressColor,
-                strokeWidth = 8.dp,
+                strokeWidth = 8.dp
             )
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.bodyMedium.copy(color = AppColors.SemiTransparentWhite)
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = AppColors.SemiTransparentWhite,
+                        fontSize = 14.sp
+                    )
                 )
                 Text(
-                    text = value,
-                    style = MaterialTheme.typography.bodySmall.copy(color = AppColors.SemiTransparentWhite)
+                    text = "${current.toInt()}/${target.toInt()} г",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = Color.White,
+                        fontSize = 12.sp
+                    )
                 )
             }
         }
@@ -185,35 +265,44 @@ fun MacroInfo(label: String, value: String, progressColor: Color) {
 }
 
 @Composable
-fun ProgressCircle(calories: String, caloriesLeft: String, progress: Float) {
+fun ProgressCircle(
+    currentCalories: Double,
+    targetCalories: Double,
+    onClick: () -> Unit
+) {
+    val progress = calculateProgress(currentCalories, targetCalories)
+    val animatedProgress by animateFloatAsState(targetValue = progress)
+
     Box(
-        modifier = Modifier.size(AppDimens.ProgressBarSize),
+        modifier = Modifier
+            .size(AppDimens.ProgressBarSize)
+            .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
         CircularProgressIndicator(
             progress = { 1f },
             modifier = Modifier.fillMaxSize(),
             color = AppColors.LightGray,
-            strokeWidth = 4.dp,
+            strokeWidth = 4.dp
         )
         CircularProgressIndicator(
-            progress = { progress },
+            progress = { animatedProgress },
             modifier = Modifier.fillMaxSize(),
             color = AppColors.Orange,
-            strokeWidth = 8.dp,
+            strokeWidth = 8.dp
         )
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = calories,
-                color = AppColors.SemiTransparentWhite,
+                text = "${currentCalories.toInt()} ккал",
+                color = Color.White,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = caloriesLeft,
+                text = "${(targetCalories - currentCalories).toInt()} ккал осталось",
                 color = AppColors.SemiTransparentWhite,
                 fontSize = 16.sp
             )
@@ -222,7 +311,11 @@ fun ProgressCircle(calories: String, caloriesLeft: String, progress: Float) {
 }
 
 @Composable
-fun InfoCard(text: String, iconRes: Int? = null, onClick: (() -> Unit)? = null) {
+fun InfoCard(
+    text: String,
+    iconRes: Int? = null,
+    onClick: (() -> Unit)? = null
+) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -239,7 +332,7 @@ fun InfoCard(text: String, iconRes: Int? = null, onClick: (() -> Unit)? = null) 
         ) {
             Text(
                 text = text,
-                color = AppColors.SemiTransparentWhite,
+                color = Color.White,
                 fontSize = 18.sp
             )
             iconRes?.let {
@@ -247,7 +340,8 @@ fun InfoCard(text: String, iconRes: Int? = null, onClick: (() -> Unit)? = null) 
                 Icon(
                     painter = painterResource(id = it),
                     contentDescription = null,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(24.dp),
+                    tint = AppColors.SemiTransparentWhite
                 )
             }
         }
@@ -255,7 +349,12 @@ fun InfoCard(text: String, iconRes: Int? = null, onClick: (() -> Unit)? = null) 
 }
 
 @Composable
-fun IconButton(iconRes: Int, onClick: () -> Unit, iconSize: Dp = AppDimens.IconSize, modifier: Modifier = Modifier) {
+fun IconButton(
+    iconRes: Int,
+    onClick: () -> Unit,
+    iconSize: Dp = AppDimens.IconSize,
+    modifier: Modifier = Modifier
+) {
     Box(
         modifier = modifier
             .size(50.dp)
@@ -271,15 +370,13 @@ fun IconButton(iconRes: Int, onClick: () -> Unit, iconSize: Dp = AppDimens.IconS
     }
 }
 
-fun calculateProgress(value: String): Float {
-    val values = value.replace(Regex("[^\\d/]"), "").split("/")
-    val currentValue = values[0].toFloatOrNull() ?: 0f
-    val totalValue = values.getOrNull(1)?.toFloatOrNull() ?: 1f
-    return (currentValue / totalValue).coerceIn(0f, 1f)
+fun calculateProgress(current: Double, target: Double): Float {
+    if (target <= 0) return 0f
+    return (current / target).toFloat().coerceIn(0f, 1f)
 }
 
-fun calculateBMI(height: Int, weight: Int): String {
-    if (height <= 0 || weight <= 0) return "N/A"
+fun calculateBMI(height: Double?, weight: Double?): String {
+    if (height == null || weight == null || height <= 0 || weight <= 0) return "N/A"
     val heightInMeters = height / 100.0
     val bmi = weight / (heightInMeters * heightInMeters)
     val decimalFormat = DecimalFormat("#.#")
