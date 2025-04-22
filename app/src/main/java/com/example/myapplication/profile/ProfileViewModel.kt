@@ -46,19 +46,19 @@ data class UserResponse(
 )
 
 @Serializable
-data class UpdateUserRequest(
-    val name: String,
-    val height: Double,
-    val weight: Double,
-    val proteinCurrent: Double,
-    val proteinTarget: Double,
-    val fatCurrent: Double,
-    val fatTarget: Double,
-    val carbsCurrent: Double,
-    val carbsTarget: Double,
-    val caloriesCurrent: Double,
-    val caloriesTarget: Double
-)
+data class UpdateNameRequest(val name: String)
+
+@Serializable
+data class UpdateHeightRequest(val height: Double)
+
+@Serializable
+data class UpdateWeightRequest(val weight: Double)
+
+@Serializable
+data class UpdateGoalWeightRequest(val goalWeight: Double)
+
+@Serializable
+data class UpdateUsernameRequest(val username: String)
 
 class ProfileViewModel : ViewModel() {
     private val client = HttpClient(OkHttp) {
@@ -174,6 +174,8 @@ class ProfileViewModel : ViewModel() {
         name: String,
         height: Double,
         weight: Double,
+        goalWeight: Double,
+        username: String,
         avatarUri: Uri?,
         onSuccess: () -> Unit,
         onError: (String) -> Unit
@@ -190,47 +192,51 @@ class ProfileViewModel : ViewModel() {
             }
 
             try {
-                val currentUser = _userResponse.value
-                val request = UpdateUserRequest(
+                val nameResponse = client.post("http://10.0.2.2:8080/auth/updatename") {
+                    header("Authorization", "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody(UpdateNameRequest(name))
+                }
+
+                if (nameResponse.status != HttpStatusCode.OK) {
+                    onError("Ошибка обновления имени: ${nameResponse.status}")
+                    _isUpdating.value = false
+                    return@launch
+                }
+
+                val heightResponse = client.post("http://10.0.2.2:8080/auth/updateheight") {
+                    header("Authorization", "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody(UpdateHeightRequest(height))
+                }
+
+                if (heightResponse.status != HttpStatusCode.OK) {
+                    onError("Ошибка обновления роста: ${heightResponse.status}")
+                    _isUpdating.value = false
+                    return@launch
+                }
+
+                val weightResponse = client.post("http://10.0.2.2:8080/auth/updateweight") {
+                    header("Authorization", "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody(UpdateWeightRequest(weight))
+                }
+
+                if (weightResponse.status != HttpStatusCode.OK) {
+                    onError("Ошибка обновления веса: ${weightResponse.status}")
+                    _isUpdating.value = false
+                    return@launch
+                }
+
+                _userResponse.value = _userResponse.value?.copy(
                     name = name,
                     height = height,
                     weight = weight,
-                    proteinCurrent = currentUser?.proteinCurrent ?: 0.0,
-                    proteinTarget = currentUser?.proteinTarget ?: 0.0,
-                    fatCurrent = currentUser?.fatCurrent ?: 0.0,
-                    fatTarget = currentUser?.fatTarget ?: 0.0,
-                    carbsCurrent = currentUser?.carbsCurrent ?: 0.0,
-                    carbsTarget = currentUser?.carbsTarget ?: 0.0,
-                    caloriesCurrent = currentUser?.caloriesCurrent ?: 0.0,
-                    caloriesTarget = currentUser?.caloriesTarget ?: 0.0
+                    goalWeight = goalWeight,
+                    username = username
                 )
-
-                val httpResponse = client.post("http://10.0.2.2:8080/auth/update") {
-                    header("Authorization", "Bearer $token")
-                    contentType(ContentType.Application.Json)
-                    setBody(request)
-                }
-
-                when (httpResponse.status) {
-                    HttpStatusCode.OK -> {
-                        // Обновляем локальные данные
-                        _userResponse.value = _userResponse.value?.copy(
-                            name = name,
-                            height = height,
-                            weight = weight
-                        )
-                        _userResponse.value?.let { saveUserToPrefs(context, it) }
-                        onSuccess()
-                    }
-                    HttpStatusCode.Unauthorized -> {
-                        _errorMessage.value = "Ошибка авторизации"
-                        TokenManager.clearToken(context)
-                        onError("Ошибка авторизации")
-                    }
-                    else -> {
-                        onError("Ошибка сервера: ${httpResponse.status}")
-                    }
-                }
+                _userResponse.value?.let { saveUserToPrefs(context, it) }
+                onSuccess()
             } catch (e: Exception) {
                 onError("Ошибка обновления: ${e.message}")
             } finally {
@@ -282,54 +288,6 @@ class ProfileViewModel : ViewModel() {
 
                 _userResponse.value?.let { saveUserToPrefs(context, it) }
                 onSuccess()
-
-                // Раскомментировать, когда сервер будет готов
-                /*
-                val request = UpdateUserRequest(
-                    name = currentUser.name,
-                    height = currentUser.height,
-                    weight = currentUser.weight,
-                    proteinCurrent = proteinCurrent,
-                    proteinTarget = proteinTarget,
-                    fatCurrent = fatCurrent,
-                    fatTarget = fatTarget,
-                    carbsCurrent = carbsCurrent,
-                    carbsTarget = carbsTarget,
-                    caloriesCurrent = caloriesCurrent,
-                    caloriesTarget = caloriesTarget
-                )
-
-                val httpResponse = client.post("http://10.0.2.2:8080/auth/update") {
-                    header("Authorization", "Bearer $token")
-                    contentType(ContentType.Application.Json)
-                    setBody(request)
-                }
-
-                when (httpResponse.status) {
-                    HttpStatusCode.OK -> {
-                        _userResponse.value = _userResponse.value?.copy(
-                            proteinCurrent = proteinCurrent,
-                            proteinTarget = proteinTarget,
-                            fatCurrent = fatCurrent,
-                            fatTarget = fatTarget,
-                            carbsCurrent = carbsCurrent,
-                            carbsTarget = carbsTarget,
-                            caloriesCurrent = caloriesCurrent,
-                            caloriesTarget = caloriesTarget
-                        )
-                        _userResponse.value?.let { saveUserToPrefs(context, it) }
-                        onSuccess()
-                    }
-                    HttpStatusCode.Unauthorized -> {
-                        _errorMessage.value = "Ошибка авторизации"
-                        TokenManager.clearToken(context)
-                        onError("Ошибка авторизации")
-                    }
-                    else -> {
-                        onError("Ошибка сервера: ${httpResponse.status}")
-                    }
-                }
-                */
             } catch (e: Exception) {
                 onError("Ошибка обновления: ${e.message}")
             } finally {
