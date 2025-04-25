@@ -2,77 +2,44 @@ package com.example.myapplication
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
-import androidx.compose.material3.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.myapplication.navigation.AppNavigation
 import com.example.myapplication.navigation.BottomNavigation
+import com.example.myapplication.utils.TokenManager
 
+/**
+ * Главная точка входа в приложение, управляющая навигацией и отображением UI.
+ *
+ * Эта функция инициализирует навигацию, определяет стартовый экран на основе состояния пользователя
+ * (первый запуск, авторизован или нет) и отображает нижнюю панель навигации для определённых экранов.
+ *
+ * @requires Android API 26 (Oreo) или выше из-за использования `LocalDate` в зависимых компонентах.
+ */
 @RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppScreen() {
     val navController = rememberNavController()
+    val context = LocalContext.current
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-
+    val startDestination = when {
+        TokenManager.isFirstLaunch(context) -> "registration"
+        TokenManager.getToken(context) != null -> "home"
+        else -> "login"
+    }
     Scaffold(
-        topBar = {
-            when (currentRoute) {
-                "home" -> {
-                    TopAppBar(
-                        title = { Text("Главная") }
-                    )
-                }
-                "pulse" -> {
-                    TopAppBar(
-                        title = { Text("Pulse") },
-                        navigationIcon = {
-                            IconButton(onClick = { navController.navigate("home") }) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.arrow_back),
-                                    contentDescription = "Back"
-                                )
-                            }
-                        }
-                    )
-                }
-                "vitamin" -> {
-                    TopAppBar(
-                        title = { Text("Vitamins") },
-                        navigationIcon = {
-                            IconButton(onClick = { navController.navigate("pulse") }) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.arrow_back),
-                                    contentDescription = "Back"
-                                )
-                            }
-                        }
-                    )
-                }
-                else -> {
-                    TopAppBar(
-                        title = { Text(currentRoute?.replaceFirstChar { it.uppercase() } ?: "") },
-                        navigationIcon = {
-                            IconButton(onClick = { navController.popBackStack() }) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.arrow_back),
-                                    contentDescription = "Back"
-                                )
-                            }
-                        }
-                    )
-                }
-            }
-        },
         bottomBar = {
-            if (currentRoute == "home") {
+            if (currentRoute != "registration" && currentRoute != "login") {
                 BottomNavigation(navController = navController)
             }
         }
@@ -89,7 +56,7 @@ fun AppScreen() {
                     )
                 )
         ) {
-            AppNavigation(navController)
+            AppNavigation(navController = navController, startDestination = startDestination)
         }
     }
 }
