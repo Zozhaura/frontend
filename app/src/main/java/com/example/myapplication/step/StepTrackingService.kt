@@ -9,13 +9,21 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import com.example.myapplication.R
-import com.example.myapplication.pulse.PulseWebSocketManager
 
-
+/**
+ * Сервис для фонового отслеживания шагов и калорий через WebSocket.
+ *
+ * Запускает WebSocket-соединения для получения данных о шагах и калориях и работает в режиме foreground.
+ */
 class StepTrackingService : Service() {
 
     private val CHANNEL_ID = "StepTrackingServiceChannel"
 
+    /**
+     * Вызывается при создании сервиса.
+     *
+     * Создаёт канал уведомлений, запускает сервис в режиме foreground и подключается к WebSocket.
+     */
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
@@ -25,6 +33,11 @@ class StepTrackingService : Service() {
         CaloriesWebSocketManager.connect("ws://10.0.2.2:8081/calories")
     }
 
+    /**
+     * Вызывается при уничтожении сервиса.
+     *
+     * Закрывает WebSocket-соединения.
+     */
     override fun onDestroy() {
         super.onDestroy()
         Log.d("StepTrackingService", "Service onDestroy: closing WebSockets")
@@ -32,8 +45,19 @@ class StepTrackingService : Service() {
         CaloriesWebSocketManager.close()
     }
 
+    /**
+     * Возвращает IBinder для привязки сервиса.
+     *
+     * @param intent Intent, переданный при привязке.
+     * @return `null`, так как сервис не поддерживает привязку.
+     */
     override fun onBind(intent: Intent?): IBinder? = null
 
+    /**
+     * Создаёт уведомление для работы сервиса в режиме foreground.
+     *
+     * @return Уведомление с заголовком и текстом о работе сервиса.
+     */
     private fun getNotification(): Notification {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Notification.Builder(this, CHANNEL_ID)
@@ -49,6 +73,10 @@ class StepTrackingService : Service() {
                 .build()
         }
     }
+
+    /**
+     * Создаёт канал уведомлений для Android 8.0 и выше.
+     */
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val serviceChannel = NotificationChannel(

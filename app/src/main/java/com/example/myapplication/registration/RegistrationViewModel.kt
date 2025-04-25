@@ -17,6 +17,17 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.net.ConnectException
 
+/**
+ * Модель данных запроса на регистрацию.
+ *
+ * @param username Имя пользователя (email).
+ * @param password Пароль.
+ * @param name Имя пользователя.
+ * @param height Рост.
+ * @param weight Вес.
+ * @param gender Пол.
+ * @param goalWeight Целевой вес.
+ */
 @Serializable
 data class AuthRequest(
     val username: String,
@@ -28,9 +39,19 @@ data class AuthRequest(
     val goalWeight: Double
 )
 
+/**
+ * Модель данных ответа на запрос регистрации.
+ *
+ * @param token Токен авторизации.
+ */
 @Serializable
 data class AuthResponse(val token: String)
 
+/**
+ * ViewModel для управления процессом регистрации.
+ *
+ * Отвечает за отправку запроса на регистрацию и обработку ответа от сервера.
+ */
 class RegistrationViewModel : ViewModel() {
     private val client = HttpClient(OkHttp) {
         install(ContentNegotiation) {
@@ -41,6 +62,21 @@ class RegistrationViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Выполняет регистрацию пользователя.
+     *
+     * Отправляет запрос на сервер с данными пользователя.
+     *
+     * @param username Имя пользователя (email).
+     * @param password Пароль.
+     * @param name Имя пользователя.
+     * @param height Рост.
+     * @param weight Вес.
+     * @param gender Пол.
+     * @param goalWeight Целевой вес.
+     * @param onSuccess Callback, вызываемый при успешной регистрации с токеном.
+     * @param onError Callback, вызываемый при ошибке с сообщением.
+     */
     fun registerUser(
         username: String,
         password: String,

@@ -1,9 +1,14 @@
- package com.example.myapplication.pulse
+package com.example.myapplication.pulse
 
 import android.util.Log
 import com.example.myapplication.utils.BaseWebSocketManager
 import kotlinx.coroutines.flow.MutableSharedFlow
 
+/**
+ * Менеджер WebSocket-соединений для получения данных о пульсе.
+ *
+ * Управляет потоками данных о текущем, максимальном и минимальном пульсе.
+ */
 object PulseWebSocketManager {
     private val _pulseFlow = MutableSharedFlow<Int>(replay = 1)
     val pulseFlow = _pulseFlow
@@ -38,18 +43,36 @@ object PulseWebSocketManager {
         }
     }
 
+    /**
+     * Подключает WebSocket для получения данных о текущем пульсе.
+     *
+     * @param url URL WebSocket-сервера.
+     */
     fun connectPulse(url: String) {
         pulseManager.connect(url)
     }
 
+    /**
+     * Подключает WebSocket для получения данных о максимальном пульсе.
+     *
+     * @param url URL WebSocket-сервера.
+     */
     fun connectMaxPulse(url: String) {
         maxPulseManager.connect(url)
     }
 
+    /**
+     * Подключает WebSocket для получения данных о минимальном пульсе.
+     *
+     * @param url URL WebSocket-сервера.
+     */
     fun connectMinPulse(url: String) {
         minPulseManager.connect(url)
     }
 
+    /**
+     * Закрывает все WebSocket-соединения.
+     */
     fun close() {
         pulseManager.close()
         maxPulseManager.close()

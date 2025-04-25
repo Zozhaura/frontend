@@ -1,4 +1,4 @@
- package com.example.myapplication.food
+package com.example.myapplication.food
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -32,13 +32,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.myapplication.diary.DiaryColors
+import com.example.myapplication.diary.DiaryDimens
 
- @OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Экран с детальной информацией о рецепте.
+ *
+ * Отображает название, категорию, пищевую ценность, способ приготовления и список ингредиентов рецепта.
+ *
+ * @param navController Контроллер навигации.
+ * @param recipeId Идентификатор рецепта.
+ * @param viewModel ViewModel для управления данными рецепта.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipeDetailScreen(
     navController: NavController,
@@ -48,6 +60,7 @@ fun RecipeDetailScreen(
     val context = LocalContext.current
     val selectedRecipe by remember { derivedStateOf { viewModel.selectedRecipe } }
     val errorMessage by remember { derivedStateOf { viewModel.errorMessage } }
+
     LaunchedEffect(recipeId) {
         viewModel.fetchRecipeDetails(context, recipeId)
     }
@@ -70,7 +83,7 @@ fun RecipeDetailScreen(
                         text = selectedRecipe?.name ?: "Рецепт",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = FoodColors.TextPrimary
+                        color = Color.White
                     )
                 },
                 navigationIcon = {
@@ -78,26 +91,29 @@ fun RecipeDetailScreen(
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back",
-                            tint = FoodColors.TextPrimary
+                            tint = Color.White
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = FoodColors.Background
+                    containerColor = Color(0xFF2E2A3B)
                 )
             )
         },
-        modifier = Modifier.background(FoodColors.Background)
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF2E2A3B))
     ) { paddingValues ->
         if (selectedRecipe == null) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .background(Color(0xFF2E2A3B))
                     .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(
-                    color = FoodColors.Accent,
+                    color = Color(0xFF00C4B4),
                     strokeWidth = 4.dp
                 )
             }
@@ -105,17 +121,18 @@ fun RecipeDetailScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
+                    .background(Color(0xFF2E2A3B))
                     .padding(paddingValues)
-                    .padding(horizontal = FoodDimens.PaddingMedium)
-                    .padding(bottom = FoodDimens.PaddingMedium),
-                verticalArrangement = Arrangement.spacedBy(FoodDimens.PaddingSmall)
+                    .padding(horizontal = DiaryDimens.PaddingMedium)
+                    .padding(bottom = DiaryDimens.PaddingMedium),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item {
                     Text(
                         text = selectedRecipe!!.name,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
-                        color = FoodColors.TextPrimary
+                        color = Color.White
                     )
 
                     selectedRecipe!!.category?.let {
@@ -123,64 +140,64 @@ fun RecipeDetailScreen(
                             text = "Категория: $it",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
-                            color = FoodColors.TextSecondary,
+                            color = DiaryColors.TextColor,
                             modifier = Modifier.padding(top = 4.dp)
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(FoodDimens.PaddingMedium))
+                    Spacer(modifier = Modifier.height(DiaryDimens.PaddingMedium))
                 }
                 selectedRecipe!!.nutrition?.let { nutrition ->
                     item {
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .shadow(FoodDimens.ElevationSmall, RoundedCornerShape(FoodDimens.CardCornerRadius)),
-                            shape = RoundedCornerShape(FoodDimens.CardCornerRadius),
-                            color = FoodColors.CardBackground
+                                .shadow(DiaryDimens.CardElevation, RoundedCornerShape(DiaryDimens.CardCornerRadius)),
+                            shape = RoundedCornerShape(DiaryDimens.CardCornerRadius),
+                            color = DiaryColors.CardBackground
                         ) {
                             Column(
-                                modifier = Modifier.padding(FoodDimens.PaddingMedium),
+                                modifier = Modifier.padding(DiaryDimens.PaddingMedium),
                                 verticalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 Text(
                                     text = "Пищевая ценность",
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = FoodColors.TextPrimary
+                                    color = Color.White
                                 )
                                 Text(
                                     text = "Калории: ${nutrition.calories.toInt()} ккал",
                                     fontSize = 16.sp,
-                                    color = FoodColors.TextSecondary
+                                    color = DiaryColors.TextColor
                                 )
                                 Text(
                                     text = "Белки: ${nutrition.proteins} г",
                                     fontSize = 16.sp,
-                                    color = FoodColors.TextSecondary
+                                    color = DiaryColors.TextColor
                                 )
                                 Text(
                                     text = "Жиры: ${nutrition.fats} г",
                                     fontSize = 16.sp,
-                                    color = FoodColors.TextSecondary
+                                    color = DiaryColors.TextColor
                                 )
                                 Text(
                                     text = "Углеводы: ${nutrition.carbohydrates} г",
                                     fontSize = 16.sp,
-                                    color = FoodColors.TextSecondary
+                                    color = DiaryColors.TextColor
                                 )
                                 nutrition.dietaryFiber?.let {
                                     Text(
                                         text = "Пищевые волокна: $it г",
                                         fontSize = 16.sp,
-                                        color = FoodColors.TextSecondary
+                                        color = DiaryColors.TextColor
                                     )
                                 }
                                 nutrition.water?.let {
                                     Text(
                                         text = "Вода: $it г",
                                         fontSize = 16.sp,
-                                        color = FoodColors.TextSecondary
+                                        color = DiaryColors.TextColor
                                     )
                                 }
                             }
@@ -188,50 +205,50 @@ fun RecipeDetailScreen(
                     }
                 }
                 item {
-                    Spacer(modifier = Modifier.height(FoodDimens.PaddingSmall))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .shadow(FoodDimens.ElevationSmall, RoundedCornerShape(FoodDimens.CardCornerRadius)),
-                        shape = RoundedCornerShape(FoodDimens.CardCornerRadius),
-                        color = FoodColors.CardBackground
+                            .shadow(DiaryDimens.CardElevation, RoundedCornerShape(DiaryDimens.CardCornerRadius)),
+                        shape = RoundedCornerShape(DiaryDimens.CardCornerRadius),
+                        color = DiaryColors.CardBackground
                     ) {
                         Column(
-                            modifier = Modifier.padding(FoodDimens.PaddingMedium)
+                            modifier = Modifier.padding(DiaryDimens.PaddingMedium)
                         ) {
                             Text(
                                 text = "Способ приготовления",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = FoodColors.TextPrimary
+                                color = Color.White
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = selectedRecipe!!.preparationMethod,
                                 fontSize = 16.sp,
-                                color = FoodColors.TextSecondary,
+                                color = DiaryColors.TextColor,
                                 lineHeight = 24.sp
                             )
                         }
                     }
                 }
                 item {
-                    Spacer(modifier = Modifier.height(FoodDimens.PaddingSmall))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .shadow(FoodDimens.ElevationSmall, RoundedCornerShape(FoodDimens.CardCornerRadius)),
-                        shape = RoundedCornerShape(FoodDimens.CardCornerRadius),
-                        color = FoodColors.CardBackground
+                            .shadow(DiaryDimens.CardElevation, RoundedCornerShape(DiaryDimens.CardCornerRadius)),
+                        shape = RoundedCornerShape(DiaryDimens.CardCornerRadius),
+                        color = DiaryColors.CardBackground
                     ) {
                         Column(
-                            modifier = Modifier.padding(FoodDimens.PaddingMedium)
+                            modifier = Modifier.padding(DiaryDimens.PaddingMedium)
                         ) {
                             Text(
                                 text = "Ингредиенты",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = FoodColors.TextPrimary
+                                color = Color.White
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                         }
@@ -239,27 +256,35 @@ fun RecipeDetailScreen(
                 }
 
                 items(selectedRecipe!!.ingredients) { ingredient ->
-                    Row(
+                    Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = FoodDimens.PaddingMedium),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .padding(horizontal = DiaryDimens.PaddingMedium),
+                        color = DiaryColors.MealItemColor,
+                        shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text(
-                            text = ingredient.name,
-                            fontSize = 16.sp,
-                            color = FoodColors.TextSecondary
-                        )
-                        Text(
-                            text = ingredient.quantity,
-                            fontSize = 16.sp,
-                            color = FoodColors.TextSecondary
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = ingredient.name,
+                                fontSize = 16.sp,
+                                color = DiaryColors.TextColor
+                            )
+                            Text(
+                                text = ingredient.quantity,
+                                fontSize = 16.sp,
+                                color = DiaryColors.TextColor
+                            )
+                        }
                     }
                 }
 
                 item {
-                    Spacer(modifier = Modifier.height(FoodDimens.PaddingLarge))
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
             }
         }
