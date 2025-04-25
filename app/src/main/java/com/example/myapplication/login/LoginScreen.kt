@@ -48,6 +48,15 @@ import com.example.myapplication.R
 import com.example.myapplication.profile.ProfileViewModel
 import com.example.myapplication.utils.TokenManager
 
+/**
+ * Экран входа в приложение.
+ *
+ * Позволяет пользователю ввести email и пароль, выполнить вход и перейти к регистрации.
+ *
+ * @param navController Контроллер навигации.
+ * @param loginViewModel ViewModel для управления процессом входа.
+ * @param profileViewModel ViewModel для загрузки информации о пользователе.
+ */
 @Composable
 fun LoginScreen(
     navController: NavController,
@@ -166,6 +175,20 @@ fun LoginScreen(
     }
 }
 
+/**
+ * Компонент ввода данных для экрана входа.
+ *
+ * Используется для ввода email и пароля с валидацией и отображением ошибок.
+ *
+ * @param value Текущее значение поля ввода.
+ * @param onValueChange Callback для изменения значения.
+ * @param label Метка поля ввода.
+ * @param keyboardType Тип клавиатуры (по умолчанию KeyboardType.Text).
+ * @param visualTransformation Трансформация ввода (например, для пароля).
+ * @param trailingIcon Иконка в конце поля (опционально).
+ * @param errorMessage Сообщение об ошибке (опционально).
+ * @param textStyle Стиль текста.
+ */
 @Composable
 fun LoginInputField(
     value: String,
@@ -204,6 +227,15 @@ fun LoginInputField(
     }
 }
 
+/**
+ * Валидирует email пользователя.
+ *
+ * Проверяет, что email не пустой, не содержит кириллицу и соответствует формату email.
+ *
+ * @param email Введённый email.
+ * @param context Контекст приложения.
+ * @return Сообщение об ошибке или null, если валидация прошла успешно.
+ */
 fun validateEmail(email: String, context: Context): String? {
     return when {
         email.isBlank() -> context.getString(R.string.email_empty_error)
@@ -213,6 +245,15 @@ fun validateEmail(email: String, context: Context): String? {
     }
 }
 
+/**
+ * Валидирует пароль пользователя.
+ *
+ * Проверяет, что пароль не пустой, содержит минимум 8 символов, буквы и цифры.
+ *
+ * @param password Введённый пароль.
+ * @param context Контекст приложения.
+ * @return Сообщение об ошибке или null, если валидация прошла успешно.
+ */
 fun validatePassword(password: String, context: Context): String? {
     return when {
         password.isBlank() -> context.getString(R.string.password_empty_error)
@@ -223,6 +264,12 @@ fun validatePassword(password: String, context: Context): String? {
     }
 }
 
+/**
+ * Проверяет доступность сети.
+ *
+ * @param context Контекст приложения.
+ * @return true, если сеть доступна, иначе false.
+ */
 fun isNetworkAvailable(context: Context): Boolean {
     val connectivityManager = ContextCompat.getSystemService(context, ConnectivityManager::class.java)
     val network = connectivityManager?.activeNetwork

@@ -18,12 +18,28 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.net.ConnectException
 
+/**
+ * Модель запроса на вход.
+ *
+ * @param username Имя пользователя (email).
+ * @param password Пароль.
+ */
 @Serializable
 data class LoginRequest(val username: String, val password: String)
 
+/**
+ * Модель ответа на запрос входа.
+ *
+ * @param token Токен авторизации.
+ */
 @Serializable
 data class AuthResponse(val token: String)
 
+/**
+ * ViewModel для управления процессом входа в приложение.
+ *
+ * Отвечает за отправку запроса на вход и управление состоянием загрузки.
+ */
 class LoginViewModel : ViewModel() {
     private val client = HttpClient(OkHttp) {
         install(ContentNegotiation) {
@@ -37,6 +53,16 @@ class LoginViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
 
+    /**
+     * Выполняет вход пользователя.
+     *
+     * Отправляет запрос на сервер с email и паролем.
+     *
+     * @param username Имя пользователя (email).
+     * @param password Пароль.
+     * @param onSuccess Callback, вызываемый при успешном входе с полученным токеном.
+     * @param onError Callback, вызываемый при ошибке с сообщением.
+     */
     fun loginUser(
         username: String,
         password: String,

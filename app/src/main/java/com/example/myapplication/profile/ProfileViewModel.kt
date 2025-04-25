@@ -27,6 +27,16 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
+/**
+ * Модель данных для ответа сервера о пользователе.
+ *
+ * @param username Имя пользователя (email).
+ * @param name Имя пользователя.
+ * @param height Рост.
+ * @param weight Вес.
+ * @param gender Пол.
+ * @param goalWeight Целевой вес.
+ */
 @Serializable
 data class UserResponse(
     val username: String,
@@ -35,31 +45,54 @@ data class UserResponse(
     val weight: Double,
     val gender: String,
     val goalWeight: Double,
-    val proteinCurrent: Double = 0.0,
-    val proteinTarget: Double = 0.0,
-    val fatCurrent: Double = 0.0,
-    val fatTarget: Double = 0.0,
-    val carbsCurrent: Double = 0.0,
-    val carbsTarget: Double = 0.0,
-    val caloriesCurrent: Double = 0.0,
-    val caloriesTarget: Double = 0.0
+    val age: Int = 30
 )
 
+/**
+ * Модель запроса для обновления имени.
+ *
+ * @param name Новое имя.
+ */
 @Serializable
 data class UpdateNameRequest(val name: String)
 
+/**
+ * Модель запроса для обновления роста.
+ *
+ * @param height Новый рост.
+ */
 @Serializable
 data class UpdateHeightRequest(val height: Double)
 
+/**
+ * Модель запроса для обновления веса.
+ *
+ * @param weight Новый вес.
+ */
 @Serializable
 data class UpdateWeightRequest(val weight: Double)
 
+/**
+ * Модель запроса для обновления целевого веса.
+ *
+ * @param goal Новый целевой вес.
+ */
 @Serializable
-data class UpdateGoalWeightRequest(val goalWeight: Double)
+data class UpdateGoalWeightRequest(val goal: Double)
 
+/**
+ * Модель запроса для обновления имени пользователя.
+ *
+ * @param username Новое имя пользователя (email).
+ */
 @Serializable
 data class UpdateUsernameRequest(val username: String)
 
+/**
+ * ViewModel для управления данными профиля пользователя.
+ *
+ * Отвечает за загрузку и обновление информации о пользователе, включая локальное хранение возраста.
+ */
 class ProfileViewModel : ViewModel() {
     private val client = HttpClient(OkHttp) {
         install(ContentNegotiation) {
@@ -82,6 +115,12 @@ class ProfileViewModel : ViewModel() {
     private val _isUpdating: MutableState<Boolean> = mutableStateOf(false)
     val isUpdating: State<Boolean> get() = _isUpdating
 
+    /**
+     * Сохраняет данные пользователя в зашифрованное хранилище.
+     *
+     * @param context Контекст приложения.
+     * @param user Данные пользователя.
+     */
     private fun saveUserToPrefs(context: Context, user: UserResponse) {
         val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
         val prefs = EncryptedSharedPreferences.create(
@@ -97,6 +136,12 @@ class ProfileViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Загружает данные пользователя из зашифрованного хранилища.
+     *
+     * @param context Контекст приложения.
+     * @return Данные пользователя или null, если данных нет.
+     */
     private fun loadUserFromPrefs(context: Context): UserResponse? {
         val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
         val prefs = EncryptedSharedPreferences.create(
@@ -114,6 +159,14 @@ class ProfileViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Загружает информацию о пользователе.
+     *
+     * Сначала пытается загрузить данные из локального хранилища, затем с сервера.
+     *
+     * @param context Контекст приложения.
+     * @param forceRefresh Принудительное обновление данных с сервера.
+     */
     fun fetchUserInfo(context: Context, forceRefresh: Boolean = false) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -144,10 +197,15 @@ class ProfileViewModel : ViewModel() {
                             throw IllegalStateException("Получен некорректный JSON: $responseText")
                         }
 
-                        val response = Json {
+                        val serverResponse = Json {
                             ignoreUnknownKeys = true
                             prettyPrint = true
                         }.decodeFromString<UserResponse>(responseText)
+
+                        val currentUser = _userResponse.value
+                        val response = serverResponse.copy(
+                            age = currentUser?.age ?: 30
+                        )
 
                         _userResponse.value = response
                         saveUserToPrefs(context, response)
@@ -169,6 +227,22 @@ class ProfileViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Обновляет информацию о пользователе.
+     *
+     * Отправляет запросы на сервер для обновления имени, роста, веса и целевого веса, а также обновляет локальные данные.
+     *
+     * @param context Контекст приложения.
+     * @param name Новое имя.
+     * @param height Новый рост.
+     * @param weight Новый вес.
+     * @param goalWeight Новый целевой вес.
+     * @param age Новый возраст.
+     * @param username Новое имя пользователя (email).
+     * @param avatarUri URI аватара (не используется в текущей реализации).
+     * @param onSuccess Callback, вызываемый при успешном обновлении.
+     * @param onError Callback, вызываемый при ошибке с сообщением.
+     */
     fun updateUserInfo(
         context: Context,
         name: String,
@@ -197,9 +271,8 @@ class ProfileViewModel : ViewModel() {
                     contentType(ContentType.Application.Json)
                     setBody(UpdateNameRequest(name))
                 }
-
                 if (nameResponse.status != HttpStatusCode.OK) {
-                    onError("Ошибка обновления имени: ${nameResponse.status}")
+                    onError("Ошибка обновления имени: ${nameResponse.status}, ${nameResponse.bodyAsText()}")
                     _isUpdating.value = false
                     return@launch
                 }
@@ -209,9 +282,8 @@ class ProfileViewModel : ViewModel() {
                     contentType(ContentType.Application.Json)
                     setBody(UpdateHeightRequest(height))
                 }
-
                 if (heightResponse.status != HttpStatusCode.OK) {
-                    onError("Ошибка обновления роста: ${heightResponse.status}")
+                    onError("Ошибка обновления роста: ${heightResponse.status}, ${heightResponse.bodyAsText()}")
                     _isUpdating.value = false
                     return@launch
                 }
@@ -221,9 +293,19 @@ class ProfileViewModel : ViewModel() {
                     contentType(ContentType.Application.Json)
                     setBody(UpdateWeightRequest(weight))
                 }
-
                 if (weightResponse.status != HttpStatusCode.OK) {
-                    onError("Ошибка обновления веса: ${weightResponse.status}")
+                    onError("Ошибка обновления веса: ${weightResponse.status}, ${weightResponse.bodyAsText()}")
+                    _isUpdating.value = false
+                    return@launch
+                }
+
+                val goalWeightResponse = client.post("http://10.0.2.2:8080/auth/updategoal") {
+                    header("Authorization", "Bearer $token")
+                    contentType(ContentType.Application.Json)
+                    setBody(UpdateGoalWeightRequest(goalWeight))
+                }
+                if (goalWeightResponse.status != HttpStatusCode.OK) {
+                    onError("Ошибка обновления целевого веса: ${goalWeightResponse.status}, ${goalWeightResponse.bodyAsText()}")
                     _isUpdating.value = false
                     return@launch
                 }
@@ -234,58 +316,14 @@ class ProfileViewModel : ViewModel() {
                     weight = weight,
                     goalWeight = goalWeight,
                     username = username
+                ) ?: UserResponse(
+                    username = username,
+                    name = name,
+                    height = height,
+                    weight = weight,
+                    gender = _userResponse.value?.gender ?: "unknown",
+                    goalWeight = goalWeight,
                 )
-                _userResponse.value?.let { saveUserToPrefs(context, it) }
-                onSuccess()
-            } catch (e: Exception) {
-                onError("Ошибка обновления: ${e.message}")
-            } finally {
-                _isUpdating.value = false
-            }
-        }
-    }
-
-    fun updateMacrosAndCalories(
-        context: Context,
-        proteinCurrent: Double,
-        proteinTarget: Double,
-        fatCurrent: Double,
-        fatTarget: Double,
-        carbsCurrent: Double,
-        carbsTarget: Double,
-        caloriesCurrent: Double,
-        caloriesTarget: Double,
-        onSuccess: () -> Unit,
-        onError: (String) -> Unit
-    ) {
-        viewModelScope.launch {
-            _isUpdating.value = true
-            _errorMessage.value = null
-
-            val token = TokenManager.getToken(context)
-            if (token == null) {
-                _errorMessage.value = "Токен отсутствует. Пожалуйста, войдите снова."
-                _isUpdating.value = false
-                return@launch
-            }
-
-            try {
-                val currentUser = _userResponse.value
-                if (currentUser == null) {
-                    onError("Пользовательские данные отсутствуют")
-                    return@launch
-                }
-                _userResponse.value = currentUser.copy(
-                    proteinCurrent = proteinCurrent,
-                    proteinTarget = proteinTarget,
-                    fatCurrent = fatCurrent,
-                    fatTarget = fatTarget,
-                    carbsCurrent = carbsCurrent,
-                    carbsTarget = carbsTarget,
-                    caloriesCurrent = caloriesCurrent,
-                    caloriesTarget = caloriesTarget
-                )
-
                 _userResponse.value?.let { saveUserToPrefs(context, it) }
                 onSuccess()
             } catch (e: Exception) {

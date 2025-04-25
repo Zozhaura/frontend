@@ -1,10 +1,15 @@
- package com.example.myapplication.pulse
+package com.example.myapplication.pulse
 
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import android.util.Log
 
+/**
+ * Сервис для отслеживания данных о пульсе.
+ *
+ * Подключается к WebSocket-серверу для получения данных о текущем, максимальном и минимальном пульсе.
+ */
 class PulseTrackingService : Service() {
     override fun onCreate() {
         super.onCreate()

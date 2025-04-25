@@ -29,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -39,9 +40,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.myapplication.diary.DiaryStorage
 import com.example.myapplication.profile.ProfileViewModel
 import java.text.DecimalFormat
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
+/**
+ * Объект, содержащий цвета, используемые на главном экране.
+ */
 object AppColors {
     val Orange = Color(0xFFFFA500)
     val LightGray = Color.LightGray
@@ -51,13 +59,25 @@ object AppColors {
     val LoadingColor = Color(0xFF9575CD)
 }
 
+/**
+ * Объект, содержащий размеры, используемые на главном экране.
+ */
 object AppDimens {
-    val ProgressBarSize = 200.dp
-    val MacroProgressBarSize = 100.dp
+    val ProgressBarSize = 220.dp
+    val MacroProgressBarSize = 110.dp
     val IconSize = 40.dp
     val CardPadding = 8.dp
 }
 
+/**
+ * Главный экран приложения.
+ *
+ * Отображает информацию о текущих макронутриентах, прогресс по калориям, ИМТ и предоставляет
+ * навигацию к другим экранам.
+ *
+ * @param navController Контроллер навигации для перехода между экранами.
+ * @param viewModel ViewModel для управления данными профиля пользователя.
+ */
 @Composable
 fun HomeScreen(
     navController: NavHostController,
@@ -67,13 +87,17 @@ fun HomeScreen(
     val userResponse by viewModel.userResponse
     val errorMessage by viewModel.errorMessage
     val isLoading by viewModel.isLoading
-
     var height by remember { mutableStateOf<Double?>(null) }
     var weight by remember { mutableStateOf<Double?>(null) }
-    var protein by remember { mutableStateOf(Pair(0.0, 0.0)) }
-    var fat by remember { mutableStateOf(Pair(0.0, 0.0)) }
-    var carbs by remember { mutableStateOf(Pair(0.0, 0.0)) }
-    var calories by remember { mutableStateOf(Pair(0.0, 0.0)) }
+    var goalWeight by remember { mutableStateOf<Double?>(null) }
+    var gender by remember { mutableStateOf<String?>(null) }
+    var age by remember { mutableStateOf<Int?>(null) }
+    val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+    val diaryEntries by remember(currentDate) { mutableStateOf(DiaryStorage.getEntriesForDate(context, currentDate)) }
+    val totalCalories = diaryEntries.sumOf { it.calories }
+    val totalProteins = diaryEntries.sumOf { it.proteins }
+    val totalFats = diaryEntries.sumOf { it.fats }
+    val totalCarbs = diaryEntries.sumOf { it.carbs }
 
     LaunchedEffect(Unit) {
         viewModel.fetchUserInfo(context)
@@ -83,10 +107,9 @@ fun HomeScreen(
         userResponse?.let {
             height = it.height
             weight = it.weight
-            protein = Pair(it.proteinCurrent, it.proteinTarget)
-            fat = Pair(it.fatCurrent, it.fatTarget)
-            carbs = Pair(it.carbsCurrent, it.carbsTarget)
-            calories = Pair(it.caloriesCurrent, it.caloriesTarget)
+            goalWeight = it.goalWeight
+            gender = it.gender
+            age = it.age
         }
     }
 
@@ -100,6 +123,12 @@ fun HomeScreen(
             }
         }
     }
+
+    val targetValues = calculateTargetValues(height, weight, goalWeight, gender, age)
+    val proteinTarget = targetValues.first
+    val fatTarget = targetValues.second
+    val carbsTarget = targetValues.third
+    val caloriesTarget = targetValues.fourth
 
     Box(
         modifier = Modifier
@@ -130,36 +159,33 @@ fun HomeScreen(
                 ) {
                     MacroInfo(
                         label = "БЕЛКИ",
-                        current = protein.first,
-                        target = protein.second,
-                        progressColor = AppColors.Orange,
+                        current = totalProteins,
+                        target = proteinTarget,
+                        progressColor = Color(0xFF6B5B95),
                     )
                     MacroInfo(
                         label = "ЖИРЫ",
-                        current = fat.first,
-                        target = fat.second,
-                        progressColor = AppColors.Orange,
+                        current = totalFats,
+                        target = fatTarget,
+                        progressColor = Color(0xFFFF6F61),
                     )
                     MacroInfo(
                         label = "УГЛЕВОДЫ",
-                        current = carbs.first,
-                        target = carbs.second,
-                        progressColor = AppColors.Orange,
+                        current = totalCarbs,
+                        target = carbsTarget,
+                        progressColor = Color(0xFF88B04B),
                     )
                 }
-
                 Spacer(modifier = Modifier.height(24.dp))
-
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(250.dp),
+                        .height(280.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     ProgressCircle(
-                        currentCalories = calories.first,
-                        targetCalories = calories.second,
-                        onClick = { navController.navigate("macros/calories") }
+                        currentCalories = totalCalories,
+                        targetCalories = caloriesTarget,
                     )
                     IconButton(
                         iconRes = R.drawable.run,
@@ -176,9 +202,7 @@ fun HomeScreen(
                             .padding(16.dp)
                     )
                 }
-
                 Spacer(modifier = Modifier.height(24.dp))
-
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -211,6 +235,14 @@ fun HomeScreen(
     }
 }
 
+/**
+ * Компонент для отображения информации о макронутриенте (белки, жиры, углеводы).
+ *
+ * @param label Название макронутриента.
+ * @param current Текущее значение макронутриента.
+ * @param target Целевое значение макронутриента.
+ * @param progressColor Цвет прогресс-бара.
+ */
 @Composable
 fun MacroInfo(
     label: String,
@@ -218,16 +250,22 @@ fun MacroInfo(
     target: Double,
     progressColor: Color,
 ) {
-    val progress = calculateProgress(current, target)
+    val progress = if (current <= target) {
+        calculateProgress(current, target)
+    } else {
+        1f
+    }
     val animatedProgress by animateFloatAsState(targetValue = progress)
-
+    val excess = if (current > target) current - target else 0.0
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .width(120.dp)
     ) {
         Box(
-            modifier = Modifier.size(AppDimens.MacroProgressBarSize),
+            modifier = Modifier
+                .size(AppDimens.MacroProgressBarSize)
+                .shadow(4.dp, RoundedCornerShape(50)),
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(
@@ -249,14 +287,18 @@ fun MacroInfo(
                     text = label,
                     style = MaterialTheme.typography.bodyMedium.copy(
                         color = AppColors.SemiTransparentWhite,
-                        fontSize = 14.sp
+                        fontSize = 16.sp
                     )
                 )
                 Text(
-                    text = "${current.toInt()}/${target.toInt()} г",
+                    text = if (current <= target) {
+                        "${current.toInt()}/${target.toInt()} г"
+                    } else {
+                        "${current.toInt()} (+${excess.toInt()}) г"
+                    },
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = Color.White,
-                        fontSize = 12.sp
+                        fontSize = 14.sp
                     )
                 )
             }
@@ -264,19 +306,29 @@ fun MacroInfo(
     }
 }
 
+/**
+ * Компонент для отображения прогресса по калориям.
+ *
+ * @param currentCalories Текущее количество калорий.
+ * @param targetCalories Целевое количество калорий.
+ */
 @Composable
 fun ProgressCircle(
     currentCalories: Double,
     targetCalories: Double,
-    onClick: () -> Unit
 ) {
-    val progress = calculateProgress(currentCalories, targetCalories)
+    val progress = if (currentCalories <= targetCalories) {
+        calculateProgress(currentCalories, targetCalories)
+    } else {
+        1f
+    }
     val animatedProgress by animateFloatAsState(targetValue = progress)
-
+    val remainingCalories = if (currentCalories < targetCalories) targetCalories - currentCalories else 0.0
+    val excessCalories = if (currentCalories > targetCalories) currentCalories - targetCalories else 0.0
     Box(
         modifier = Modifier
             .size(AppDimens.ProgressBarSize)
-            .clickable { onClick() },
+            .shadow(4.dp, RoundedCornerShape(50)),
         contentAlignment = Alignment.Center
     ) {
         CircularProgressIndicator(
@@ -297,19 +349,36 @@ fun ProgressCircle(
             Text(
                 text = "${currentCalories.toInt()} ккал",
                 color = Color.White,
-                fontSize = 24.sp,
+                fontSize = 28.sp,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "${(targetCalories - currentCalories).toInt()} ккал осталось",
+                text = if (currentCalories <= targetCalories) {
+                    "${remainingCalories.toInt()} ккал осталось"
+                } else {
+                    "Цель выполнена! +${excessCalories.toInt()} ккал"
+                },
                 color = AppColors.SemiTransparentWhite,
-                fontSize = 16.sp
+                fontSize = 18.sp
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Цель: ${targetCalories.toInt()} ккал",
+                color = AppColors.SemiTransparentWhite,
+                fontSize = 14.sp
             )
         }
     }
 }
 
+/**
+ * Компонент для отображения информационной карточки.
+ *
+ * @param text Текст на карточке.
+ * @param iconRes Ресурс иконки (опционально).
+ * @param onClick Callback для обработки клика (опционально).
+ */
 @Composable
 fun InfoCard(
     text: String,
@@ -348,6 +417,14 @@ fun InfoCard(
     }
 }
 
+/**
+ * Компонент для отображения кнопки с иконкой.
+ *
+ * @param iconRes Ресурс иконки.
+ * @param onClick Callback для обработки клика.
+ * @param iconSize Размер иконки.
+ * @param modifier Модификатор для компонента.
+ */
 @Composable
 fun IconButton(
     iconRes: Int,
@@ -370,11 +447,25 @@ fun IconButton(
     }
 }
 
+/**
+ * Вычисляет прогресс для текущего значения относительно целевого.
+ *
+ * @param current Текущее значение.
+ * @param target Целевое значение.
+ * @return Прогресс в диапазоне от 0 до 1.
+ */
 fun calculateProgress(current: Double, target: Double): Float {
     if (target <= 0) return 0f
     return (current / target).toFloat().coerceIn(0f, 1f)
 }
 
+/**
+ * Вычисляет индекс массы тела (ИМТ).
+ *
+ * @param height Рост в сантиметрах.
+ * @param weight Вес в килограммах.
+ * @return Строковое представление ИМТ или "N/A", если данные некорректны.
+ */
 fun calculateBMI(height: Double?, weight: Double?): String {
     if (height == null || weight == null || height <= 0 || weight <= 0) return "N/A"
     val heightInMeters = height / 100.0
@@ -382,3 +473,59 @@ fun calculateBMI(height: Double?, weight: Double?): String {
     val decimalFormat = DecimalFormat("#.#")
     return decimalFormat.format(bmi)
 }
+
+/**
+ * Вычисляет целевые значения макронутриентов и калорий.
+ *
+ * @param height Рост в сантиметрах.
+ * @param weight Вес в килограммах.
+ * @param goalWeight Целевой вес в килограммах.
+ * @param gender Пол пользователя ("male" или "female").
+ * @param age Возраст пользователя.
+ * @return Кортеж из четырёх значений: белки, жиры, углеводы, калории.
+ */
+fun calculateTargetValues(
+    height: Double?,
+    weight: Double?,
+    goalWeight: Double?,
+    gender: String?,
+    age: Int?
+): Quadruple<Double, Double, Double, Double> {
+    if (height == null || weight == null || goalWeight == null || gender == null || age == null ||
+        height <= 0 || weight <= 0 || goalWeight <= 0 || age <= 0) {
+        return Quadruple(0.0, 0.0, 0.0, 0.0)
+    }
+    val bmr: Double = if (gender.lowercase() == "male") {
+        10 * weight + 6.25 * height - 5 * age + 5
+    } else {
+        10 * weight + 6.25 * height - 5 * age - 161
+    }
+    val activityFactor = 1.55
+    var totalCalories = bmr * activityFactor
+    when {
+        goalWeight < weight -> totalCalories *= 0.85
+        goalWeight > weight -> totalCalories *= 1.15
+    }
+    val proteinCalories = totalCalories * 0.30
+    val fatCalories = totalCalories * 0.30
+    val carbsCalories = totalCalories * 0.40
+    val proteinTarget = proteinCalories / 4
+    val fatTarget = fatCalories / 9
+    val carbsTarget = carbsCalories / 4
+    return Quadruple(proteinTarget, fatTarget, carbsTarget, totalCalories)
+}
+
+/**
+ * Класс данных для хранения четырёх значений.
+ *
+ * @param first Первое значение.
+ * @param second Второе значение.
+ * @param third Третье значение.
+ * @param fourth Четвёртое значение.
+ */
+data class Quadruple<out A, out B, out C, out D>(
+    val first: A,
+    val second: B,
+    val third: C,
+    val fourth: D
+)

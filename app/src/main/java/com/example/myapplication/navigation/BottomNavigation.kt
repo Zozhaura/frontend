@@ -1,13 +1,20 @@
 package com.example.myapplication.navigation
 
+import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavHostController
-import androidx.compose.runtime.Composable
 import com.example.myapplication.R
 
+/**
+ * Нижняя панель навигации приложения.
+ *
+ * Содержит кнопки для перехода на основные экраны приложения.
+ *
+ * @param navController Контроллер навигации.
+ */
 @Composable
 fun BottomNavigation(navController: NavHostController) {
     NavigationBar {

@@ -45,4 +45,8 @@
     <string name="name_too_long_error">Имя не должно превышать 50 символов</string>
     <string name="logout_success">Вы вышли из аккаунта</string>
     <string name="email_too_long_error">Email слишком длинный (максимум 100 символов)</string>
+    <string name="token_missing">Токен отсутствует. Пожалуйста, войдите снова.</string>
+    <string name="unauthorized_error">Ошибка авторизации. Пожалуйста, войдите снова.</string>
+    <string name="recipe_load_error">Ошибка загрузки рецептов: %1$s</string>
+    <string name="network_error">Ошибка сети: %1$s</string>
 </resources>

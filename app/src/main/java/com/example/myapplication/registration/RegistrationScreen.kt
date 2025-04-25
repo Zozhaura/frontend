@@ -41,6 +41,15 @@ import com.example.myapplication.R
 import com.example.myapplication.profile.ProfileViewModel
 import com.example.myapplication.utils.TokenManager
 
+/**
+ * Экран регистрации пользователя.
+ *
+ * Позволяет пользователю ввести данные для регистрации и отправить их на сервер.
+ *
+ * @param navController Контроллер навигации.
+ * @param registrationViewModel ViewModel для управления процессом регистрации.
+ * @param profileViewModel ViewModel для загрузки информации о пользователе после регистрации.
+ */
 @Composable
 fun RegistrationScreen(
     navController: NavController,
@@ -244,6 +253,18 @@ fun RegistrationScreen(
     }
 }
 
+/**
+ * Компонент ввода данных для экрана регистрации.
+ *
+ * Используется для ввода данных пользователя с валидацией и отображением ошибок.
+ *
+ * @param value Текущее значение поля ввода.
+ * @param onValueChange Callback для изменения значения.
+ * @param label Метка поля ввода.
+ * @param keyboardType Тип клавиатуры (по умолчанию KeyboardType.Text).
+ * @param textStyle Стиль текста.
+ * @param errorMessage Сообщение об ошибке (опционально).
+ */
 @Composable
 fun RegistrationInputField(
     value: String,
@@ -278,6 +299,14 @@ fun RegistrationInputField(
     }
 }
 
+/**
+ * Компонент выпадающего меню для выбора пола.
+ *
+ * @param options Список доступных опций.
+ * @param selected Выбранная опция.
+ * @param onSelectionChange Callback для изменения выбранной опции.
+ * @param errorMessage Сообщение об ошибке (опционально).
+ */
 @Composable
 fun DropdownMenuBox(
     options: List<String>,
@@ -325,6 +354,13 @@ fun DropdownMenuBox(
     }
 }
 
+/**
+ * Валидирует email пользователя.
+ *
+ * @param email Введённый email.
+ * @param context Контекст приложения.
+ * @return Сообщение об ошибке или null, если валидация прошла успешно.
+ */
 fun validateEmail(email: String, context: Context): String? {
     return when {
         email.isBlank() -> context.getString(R.string.email_empty_error)
@@ -334,6 +370,13 @@ fun validateEmail(email: String, context: Context): String? {
     }
 }
 
+/**
+ * Валидирует пароль пользователя.
+ *
+ * @param password Введённый пароль.
+ * @param context Контекст приложения.
+ * @return Сообщение об ошибке или null, если валидация прошла успешно.
+ */
 fun validatePassword(password: String, context: Context): String? {
     return when {
         password.isBlank() -> context.getString(R.string.password_empty_error)
@@ -344,6 +387,13 @@ fun validatePassword(password: String, context: Context): String? {
     }
 }
 
+/**
+ * Валидирует имя пользователя.
+ *
+ * @param name Введённое имя.
+ * @param context Контекст приложения.
+ * @return Сообщение об ошибке или null, если валидация прошла успешно.
+ */
 fun validateName(name: String, context: Context): String? {
     return when {
         name.isBlank() -> context.getString(R.string.name_empty_error)
@@ -353,6 +403,13 @@ fun validateName(name: String, context: Context): String? {
     }
 }
 
+/**
+ * Валидирует возраст пользователя.
+ *
+ * @param age Введённый возраст.
+ * @param context Контекст приложения.
+ * @return Сообщение об ошибке или null, если валидация прошла успешно.
+ */
 fun validateAge(age: String, context: Context): String? {
     val ageInt = age.toIntOrNull()
     return when {
@@ -363,6 +420,13 @@ fun validateAge(age: String, context: Context): String? {
     }
 }
 
+/**
+ * Валидирует вес пользователя.
+ *
+ * @param weight Введённый вес.
+ * @param context Контекст приложения.
+ * @return Сообщение об ошибке или null, если валидация прошла успешно.
+ */
 fun validateWeight(weight: String, context: Context): String? {
     val weightDouble = weight.toDoubleOrNull()
     return when {
@@ -373,6 +437,13 @@ fun validateWeight(weight: String, context: Context): String? {
     }
 }
 
+/**
+ * Валидирует рост пользователя.
+ *
+ * @param height Введённый рост.
+ * @param context Контекст приложения.
+ * @return Сообщение об ошибке или null, если валидация прошла успешно.
+ */
 fun validateHeight(height: String, context: Context): String? {
     val heightDouble = height.toDoubleOrNull()
     return when {
@@ -383,6 +454,13 @@ fun validateHeight(height: String, context: Context): String? {
     }
 }
 
+/**
+ * Валидирует целевой вес пользователя.
+ *
+ * @param goalWeight Введённый целевой вес.
+ * @param context Контекст приложения.
+ * @return Сообщение об ошибке или null, если валидация прошла успешно.
+ */
 fun validateGoalWeight(goalWeight: String, context: Context): String? {
     val goalWeightDouble = goalWeight.toDoubleOrNull()
     return when {
