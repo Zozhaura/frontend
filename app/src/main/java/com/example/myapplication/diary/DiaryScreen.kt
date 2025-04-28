@@ -4,43 +4,28 @@ import android.content.Context
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.*
+import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.edit
@@ -60,9 +45,9 @@ import java.util.Locale
 object DiaryColors {
     val CardBackground = Color(0xFF494358)
     val TextColor = Color.LightGray
-    val ProteinColor = Color(0xFF6B5B95)
-    val FatColor = Color(0xFFFF6F61)
-    val CarbsColor = Color(0xFF88B04B)
+    val ProteinColor = Color(0xFF7841FF)
+    val FatColor = Color(0xFFFF7043)
+    val CarbsColor = Color(0xFF8BFF00)
     val MealItemColor = Color(0xFF5E4D7A)
 }
 
@@ -382,62 +367,122 @@ private fun MealGroup(
     onEntryClick: (DiaryEntry) -> Unit
 ) {
     var expanded by remember { mutableStateOf(true) }
+    val totalCalories = entries.sumOf { it.calories }.toInt()
 
     Surface(
-        color = DiaryColors.CardBackground,
-        shape = RoundedCornerShape(DiaryDimens.CardCornerRadius),
-        shadowElevation = DiaryDimens.CardElevation,
+        color = Color(0xFF3A3347),
+        shape = RoundedCornerShape(20.dp),
+        shadowElevation = 8.dp,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 12.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { expanded = !expanded },
+                    .clickable { expanded = !expanded }
+                    .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = title,
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleMedium
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    MealTypeIcon(mealType = title)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = title,
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "${entries.sumOf { it.calories }.toInt()} ккал",
-                        color = DiaryColors.TextColor,
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "$totalCalories ккал",
+                            color = DiaryColors.TextColor,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
                     Icon(
-                        imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        imageVector = if (expanded) Icons.Default.KeyboardArrowUp
+                        else Icons.Default.KeyboardArrowDown,
                         contentDescription = null,
-                        tint = Color.White
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }
 
             if (expanded) {
-                Spacer(modifier = Modifier.height(8.dp))
                 AddMealButton(onClick = onAddClick)
                 if (entries.isEmpty()) {
                     Text(
                         text = "Нет блюд",
-                        color = DiaryColors.TextColor,
-                        modifier = Modifier.padding(12.dp)
+                        color = DiaryColors.TextColor.copy(alpha = 0.7f),
+                        modifier = Modifier
+                            .padding(vertical = 16.dp)
+                            .fillMaxWidth(),
+                        textAlign = TextAlign.Center
                     )
                 } else {
-                    entries.forEach { entry ->
-                        MealItem(
-                            entry = entry,
-                            onClick = { onEntryClick(entry) }
-                        )
+                    Column(
+                        modifier = Modifier.padding(top = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        entries.forEach { entry ->
+                            ModernMealItem(
+                                entry = entry,
+                                onClick = { onEntryClick(entry) }
+                            )
+                        }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun MealTypeIcon(mealType: String) {
+    val icon = when(mealType) {
+        "Завтрак" -> Icons.Default.WbSunny
+        "Обед" -> Icons.Default.LunchDining
+        "Ужин" -> Icons.Default.DinnerDining
+        else -> Icons.Default.LocalCafe
+    }
+
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .background(
+                color = when(mealType) {
+                    "Завтрак" -> Color(0xFFFFA726).copy(alpha = 0.2f)
+                    "Обед" -> Color(0xFF66BB6A).copy(alpha = 0.2f)
+                    "Ужин" -> Color(0xFF42A5F5).copy(alpha = 0.2f)
+                    else -> Color(0xFFAB47BC).copy(alpha = 0.2f)
+                },
+                shape = CircleShape
+            )
+            .padding(8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = mealType,
+            tint = when(mealType) {
+                "Завтрак" -> Color(0xFFFFA726)
+                "Обед" -> Color(0xFF66BB6A)
+                "Ужин" -> Color(0xFF42A5F5)
+                else -> Color(0xFFAB47BC)
+            },
+            modifier = Modifier.size(20.dp)
+        )
     }
 }
 
@@ -448,33 +493,27 @@ private fun MealGroup(
  */
 @Composable
 private fun AddMealButton(onClick: () -> Unit) {
-    Surface(
-        color = DiaryColors.MealItemColor,
-        shape = RoundedCornerShape(8.dp),
+    OutlinedButton(
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
+            .padding(vertical = 12.dp),
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, Color(0xFFFF5722)),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = Color.Transparent,
+            contentColor = Color(0xFFFF5722))
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onClick)
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Add food",
-                tint = Color.White,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Добавить блюдо",
-                color = Color.White
-            )
-        }
+        Icon(
+            imageVector = Icons.Default.Add,
+            contentDescription = "Add food",
+            modifier = Modifier.size(18.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = "Добавить блюдо",
+            fontSize = 16.sp
+        )
     }
 }
 
@@ -485,37 +524,34 @@ private fun AddMealButton(onClick: () -> Unit) {
  * @param onClick Callback, вызываемый при клике на элемент.
  */
 @Composable
-private fun MealItem(
+private fun ModernMealItem(
     entry: DiaryEntry,
     onClick: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    Surface(
-        color = DiaryColors.MealItemColor,
-        shape = RoundedCornerShape(8.dp),
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable {
-                    if (!entry.isCustom && entry.recipeId != null) {
-                        onClick()
-                    } else {
-                        expanded = !expanded
-                        if (entry.isCustom) {
-                            Toast.makeText(context, "Это пользовательское блюдо, подробности недоступны", Toast.LENGTH_SHORT).show()
-                        } else if (entry.recipeId == null) {
-                            Toast.makeText(context, "ID рецепта отсутствует", Toast.LENGTH_SHORT).show()
-                        }
+            .clickable {
+                if (!entry.isCustom && entry.recipeId != null) {
+                    onClick()
+                } else {
+                    expanded = !expanded
+                    if (entry.isCustom) {
+                        Toast.makeText(context, "Это пользовательское блюдо, подробности недоступны", Toast.LENGTH_SHORT).show()
+                    } else if (entry.recipeId == null) {
+                        Toast.makeText(context, "ID рецепта отсутствует", Toast.LENGTH_SHORT).show()
                     }
                 }
-                .padding(12.dp)
-        ) {
+            },
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF4A4458))
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -524,13 +560,16 @@ private fun MealItem(
                 Text(
                     text = entry.name,
                     color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
                     modifier = Modifier.weight(1f)
                 )
 
                 Text(
                     text = "${entry.calories.toInt()} ккал",
                     color = DiaryColors.TextColor,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
                 )
             }
 
@@ -586,7 +625,7 @@ private fun NutritionInfoItem(name: String, value: Double, color: Color) {
 }
 
 /**
- * Отображает распределение макронутриентов в виде полоски.
+ * Отображает распределение макронутриентов в виде круговой диаграммы с детализацией.
  *
  * @param totalProteins Общее количество белков.
  * @param totalFats Общее количество жиров.
@@ -599,64 +638,216 @@ private fun MacronutrientsDistribution(
     totalCarbs: Double
 ) {
     val total = totalProteins + totalFats + totalCarbs
-    val proteinPercent = if (total > 0) totalProteins / total else 0.0
-    val fatPercent = if (total > 0) totalFats / total else 0.0
-    val carbsPercent = if (total > 0) totalCarbs / total else 0.0
+    val proteinPercent = if (total > 0) (totalProteins / total * 100).toFloat() else 0f
+    val fatPercent = if (total > 0) (totalFats / total * 100).toFloat() else 0f
+    val carbsPercent = if (total > 0) (totalCarbs / total * 100).toFloat() else 0f
 
     Surface(
         shape = RoundedCornerShape(DiaryDimens.CardCornerRadius),
         color = DiaryColors.CardBackground,
-        shadowElevation = DiaryDimens.CardElevation
+        shadowElevation = DiaryDimens.CardElevation,
+        modifier = Modifier.padding(horizontal = 8.dp)
     ) {
-        Column(modifier = Modifier.padding(DiaryDimens.PaddingMedium)) {
+        Column(
+            modifier = Modifier.padding(DiaryDimens.PaddingMedium),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Text(
-                text = "Распределение макронутриентов",
+                text = "Баланс макронутриентов",
                 style = MaterialTheme.typography.titleMedium,
                 color = Color.White,
-                modifier = Modifier.padding(bottom = 12.dp)
+                modifier = Modifier.padding(bottom = 16.dp)
             )
 
             Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                ) {
+                    PieChart(
+                        proteinPercent = proteinPercent,
+                        fatPercent = fatPercent,
+                        carbsPercent = carbsPercent,
+                        modifier = Modifier.size(120.dp)
+                    )
+                }
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    NutrientLegendItem(
+                        color = DiaryColors.ProteinColor,
+                        name = "Белки",
+                        value = totalProteins,
+                    )
+
+                    NutrientLegendItem(
+                        color = DiaryColors.FatColor,
+                        name = "Жиры",
+                        value = totalFats,
+                    )
+
+                    NutrientLegendItem(
+                        color = DiaryColors.CarbsColor,
+                        name = "Углеводы",
+                        value = totalCarbs,
+                    )
+                }
+            }
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(12.dp)
-            ) {
-                if (proteinPercent > 0) {
-                    Box(
-                        modifier = Modifier
-                            .weight(proteinPercent.toFloat())
-                            .fillMaxHeight()
-                            .background(DiaryColors.ProteinColor)
-                    )
-                }
-                if (fatPercent > 0) {
-                    Box(
-                        modifier = Modifier
-                            .weight(fatPercent.toFloat())
-                            .fillMaxHeight()
-                            .background(DiaryColors.FatColor)
-                    )
-                }
-                if (carbsPercent > 0) {
-                    Box(
-                        modifier = Modifier
-                            .weight(carbsPercent.toFloat())
-                            .fillMaxHeight()
-                            .background(DiaryColors.CarbsColor)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
+                    .padding(top = 16.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Text("Белки: ${totalProteins.toInt()}г", color = DiaryColors.TextColor)
-                Text("Жиры: ${totalFats.toInt()}г", color = DiaryColors.TextColor)
-                Text("Угл: ${totalCarbs.toInt()}г", color = DiaryColors.TextColor)
+                NutrientDetailItem(
+                    value = totalProteins.toInt(),
+                    unit = "г",
+                    label = "Белки",
+                    color = DiaryColors.ProteinColor
+                )
+
+                NutrientDetailItem(
+                    value = totalFats.toInt(),
+                    unit = "г",
+                    label = "Жиры",
+                    color = DiaryColors.FatColor
+                )
+
+                NutrientDetailItem(
+                    value = totalCarbs.toInt(),
+                    unit = "г",
+                    label = "Углеводы",
+                    color = DiaryColors.CarbsColor
+                )
+
+                NutrientDetailItem(
+                    value = total.toInt(),
+                    unit = "г",
+                    label = "Всего",
+                    color = DiaryColors.TextColor
+                )
             }
         }
+    }
+}
+
+/**
+ * Круговая диаграмма распределения макронутриентов.
+ */
+@Composable
+private fun PieChart(
+    proteinPercent: Float,
+    fatPercent: Float,
+    carbsPercent: Float,
+    modifier: Modifier = Modifier
+) {
+    Canvas(modifier = modifier) {
+        val diameter = size.minDimension
+        val strokeWidth = diameter * 0.15f
+
+        var startAngle = -90f
+
+        drawArc(
+            color = DiaryColors.ProteinColor,
+            startAngle = startAngle,
+            sweepAngle = proteinPercent * 3.6f,
+            useCenter = false,
+            topLeft = Offset(strokeWidth / 2, strokeWidth / 2),
+            size = Size(diameter - strokeWidth, diameter - strokeWidth),
+            style = Stroke(strokeWidth, cap = StrokeCap.Round)
+        )
+        startAngle += proteinPercent * 3.6f
+
+        drawArc(
+            color = DiaryColors.FatColor,
+            startAngle = startAngle,
+            sweepAngle = fatPercent * 3.6f,
+            useCenter = false,
+            topLeft = Offset(strokeWidth / 2, strokeWidth / 2),
+            size = Size(diameter - strokeWidth, diameter - strokeWidth),
+            style = Stroke(strokeWidth, cap = StrokeCap.Round)
+        )
+        startAngle += fatPercent * 3.6f
+
+        drawArc(
+            color = DiaryColors.CarbsColor,
+            startAngle = startAngle,
+            sweepAngle = carbsPercent * 3.6f,
+            useCenter = false,
+            topLeft = Offset(strokeWidth / 2, strokeWidth / 2),
+            size = Size(diameter - strokeWidth, diameter - strokeWidth),
+            style = Stroke(strokeWidth, cap = StrokeCap.Round)
+        )
+    }
+}
+
+/**
+ * Элемент легенды для макронутриента.
+ */
+@Composable
+private fun NutrientLegendItem(
+    color: Color,
+    name: String,
+    value: Double,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(horizontal = 8.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(12.dp)
+                .clip(CircleShape)
+                .background(color)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = "$name: ${value.toInt()}г",
+            color = DiaryColors.TextColor,
+            fontSize = 14.sp
+        )
+    }
+}
+
+/**
+ * Компактный элемент с информацией о нутриенте (значение и единицы на одной строке).
+ */
+@Composable
+private fun NutrientDetailItem(
+    value: Int,
+    unit: String,
+    label: String,
+    color: Color
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(horizontal = 4.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "$value",
+                color = color,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = unit,
+                color = color,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(bottom = 2.dp)
+            )
+        }
+        Text(
+            text = label,
+            color = DiaryColors.TextColor,
+            fontSize = 12.sp
+        )
     }
 }

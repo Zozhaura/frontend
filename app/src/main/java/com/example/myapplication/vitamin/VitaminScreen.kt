@@ -1,53 +1,27 @@
 package com.example.myapplication.vitamin
 
 import android.annotation.SuppressLint
-import android.os.Build
 import androidx.annotation.RequiresApi
+import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.shape.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.runtime.snapshots.SnapshotStateMap
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.*
+import androidx.compose.ui.*
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.*
 import androidx.navigation.NavController
 import java.time.LocalDate
 import java.util.Locale
@@ -57,13 +31,18 @@ import java.time.format.TextStyle as JavaTextStyle
  * Объект, содержащий цвета, используемые на экране витаминов.
  */
 object VitaminColors {
-    val CardBackground = Color(0xFF494358)
+    val CardBackground = Color(0xFF3A3347)
     val TextColor = Color.LightGray
-    val ProgressBarColor = Color(0xFFBB86FC)
+    val White = Color.White
+
+    val AccentColor = Color(0xFF6650a4)
+    val SecondaryBackground = Color(0xFF5E4D7A)
+    val ErrorColor = Color(0xFFE53935)
+
     val VitaminABackground = Color(0xFFFF6F61)
-    val VitaminB1Background = Color(0xFF6B5B95)
+    val VitaminB1Background = Color(0xFF7046FD)
     val VitaminB2Background = Color(0xFF88B04B)
-    val VitaminB3Background = Color(0xFF705757)
+    val VitaminB3Background = Color(0xFFFF8585)
     val VitaminB5Background = Color(0xFF9575CD)
     val VitaminB6Background = Color(0xFF4CAF50)
     val VitaminB12Background = Color(0xFF42A5F5)
@@ -71,11 +50,11 @@ object VitaminColors {
     val VitaminDBackground = Color(0xFFEF5350)
     val VitaminEBackground = Color(0xFFAB47BC)
     val VitaminKBackground = Color(0xFF26A69A)
-    val CustomVitaminBackground = Color(0xFF78909C)
-    val InputFieldBackground = Color(0xFF3A3A3A)
-    val TakenColor = Color(0xFF4CAF50)
-    val NotTakenColor = Color(0xFFE53935)
-    val ButtonBackground = Color(0xFF6200EE)
+    val CustomVitaminBackground = Color(0xFF009AFF)
+
+    val ButtonBackground = Color(0xFF6650a4)
+    val ButtonContent = Color.White
+    val OutlinedButtonBorder = Color(0xFF6650a4)
 }
 
 /**
@@ -84,12 +63,25 @@ object VitaminColors {
 object VitaminDimens {
     val PaddingSmall = 8.dp
     val PaddingMedium = 16.dp
+    val PaddingLarge = 24.dp
+
     val CardCornerRadius = 16.dp
-    val CardElevation = 4.dp
-    val ProgressBarSize = 60.dp
-    val VitaminBoxSize = 60.dp
-    val ButtonHeight = 36.dp
-    val DayCircleSize = 36.dp
+    val CardElevation = 8.dp
+    val CardPadding = 16.dp
+
+    val IconSize = 24.dp
+    val SmallIconSize = 18.dp
+    val VitaminIconSize = 40.dp
+    val VitaminIconInnerSize = 20.dp
+    val ButtonHeight = 48.dp
+    val AddButtonHeight = 50.dp
+    val ProgressBarHeight = 20.dp
+    val DayCircleSize = 32.dp
+
+    val TextSmall = 12.sp
+    val TextMedium = 14.sp
+    val TextLarge = 16.sp
+    val TextTitle = 18.sp
 }
 
 /**
@@ -163,14 +155,12 @@ fun VitaminScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF121212))
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(VitaminDimens.PaddingMedium),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(
                 onClick = {
@@ -178,7 +168,7 @@ fun VitaminScreen(
                         popUpTo("vitamin") { inclusive = true }
                     }
                 },
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(VitaminDimens.VitaminIconSize)
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -186,13 +176,6 @@ fun VitaminScreen(
                     tint = VitaminColors.TextColor
                 )
             }
-            Text(
-                text = "ВИТАМИНЫ",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = VitaminColors.TextColor
-            )
-            Spacer(modifier = Modifier.width(48.dp))
         }
 
         LazyColumn(
@@ -202,20 +185,27 @@ fun VitaminScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {
-                Button(
+                OutlinedButton(
                     onClick = { showAddVitaminForm = !showAddVitaminForm },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(VitaminDimens.ButtonHeight)
+                        .height(VitaminDimens.AddButtonHeight)
                         .padding(bottom = VitaminDimens.PaddingMedium),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = VitaminColors.ButtonBackground)
+                    shape = RoundedCornerShape(VitaminDimens.CardCornerRadius),
+                    border = BorderStroke(1.dp, VitaminColors.OutlinedButtonBorder),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = VitaminColors.AccentColor)
                 ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add vitamin",
+                        modifier = Modifier.size(VitaminDimens.SmallIconSize)
+                    )
+                    Spacer(modifier = Modifier.width(VitaminDimens.PaddingSmall))
                     Text(
                         text = "Добавить свой витамин",
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = VitaminDimens.TextLarge
                     )
                 }
 
@@ -229,119 +219,90 @@ fun VitaminScreen(
                         shadowElevation = VitaminDimens.CardElevation
                     ) {
                         Column(
-                            modifier = Modifier.padding(VitaminDimens.PaddingMedium),
+                            modifier = Modifier.padding(VitaminDimens.CardPadding),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                BasicTextField(
+                                OutlinedTextField(
                                     value = newVitaminName,
                                     onValueChange = { newVitaminName = it },
                                     modifier = Modifier
-                                        .weight(1f)
-                                        .background(VitaminColors.InputFieldBackground, RoundedCornerShape(8.dp))
-                                        .padding(12.dp),
-                                    textStyle = androidx.compose.ui.text.TextStyle(
-                                        color = VitaminColors.TextColor,
-                                        fontSize = 16.sp
-                                    ),
+                                        .weight(1f),
+                                    label = { Text("Название витамина", color = VitaminColors.TextColor) },
                                     singleLine = true,
-                                    decorationBox = { innerTextField ->
-                                        if (newVitaminName.isEmpty()) {
-                                            Text(
-                                                text = "Название витамина",
-                                                color = Color.Gray,
-                                                fontSize = 16.sp
-                                            )
-                                        }
-                                        innerTextField()
-                                    }
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = VitaminColors.SecondaryBackground,
+                                        unfocusedContainerColor = VitaminColors.SecondaryBackground,
+                                        focusedTextColor = VitaminColors.White,
+                                        unfocusedTextColor = VitaminColors.White
+                                    )
                                 )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                BasicTextField(
+                                Spacer(modifier = Modifier.width(VitaminDimens.PaddingSmall))
+                                OutlinedTextField(
                                     value = newVitaminDosage,
                                     onValueChange = { if (it.all { char -> char.isDigit() } && it.length <= 2) newVitaminDosage = it },
                                     modifier = Modifier
-                                        .width(60.dp)
-                                        .background(VitaminColors.InputFieldBackground, RoundedCornerShape(8.dp))
-                                        .padding(12.dp),
-                                    textStyle = androidx.compose.ui.text.TextStyle(
-                                        color = VitaminColors.TextColor,
-                                        fontSize = 16.sp
-                                    ),
+                                        .width(80.dp),
+                                    label = { Text("Доза", color = VitaminColors.TextColor) },
                                     singleLine = true,
-                                    decorationBox = { innerTextField ->
-                                        if (newVitaminDosage.isEmpty()) {
-                                            Text(
-                                                text = "Доза",
-                                                color = Color.Gray,
-                                                fontSize = 16.sp
-                                            )
-                                        }
-                                        innerTextField()
-                                    }
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = VitaminColors.SecondaryBackground,
+                                        unfocusedContainerColor = VitaminColors.SecondaryBackground,
+                                        focusedTextColor = VitaminColors.White,
+                                        unfocusedTextColor = VitaminColors.White
+                                    )
                                 )
                             }
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(VitaminDimens.PaddingSmall))
                             Row(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                BasicTextField(
+                                OutlinedTextField(
                                     value = newVitaminDosageAmount,
                                     onValueChange = { if (it.all { char -> char.isDigit() || char == '.' } && it.length <= 6) newVitaminDosageAmount = it },
                                     modifier = Modifier
-                                        .width(80.dp)
-                                        .background(VitaminColors.InputFieldBackground, RoundedCornerShape(8.dp))
-                                        .padding(12.dp),
-                                    textStyle = androidx.compose.ui.text.TextStyle(
-                                        color = VitaminColors.TextColor,
-                                        fontSize = 16.sp
-                                    ),
+                                        .width(100.dp),
+                                    label = { Text("Количество", color = VitaminColors.TextColor) },
                                     singleLine = true,
-                                    decorationBox = { innerTextField ->
-                                        if (newVitaminDosageAmount.isEmpty()) {
-                                            Text(
-                                                text = "Кол-во",
-                                                color = Color.Gray,
-                                                fontSize = 16.sp
-                                            )
-                                        }
-                                        innerTextField()
-                                    }
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = VitaminColors.SecondaryBackground,
+                                        unfocusedContainerColor = VitaminColors.SecondaryBackground,
+                                        focusedTextColor = VitaminColors.White,
+                                        unfocusedTextColor = VitaminColors.White
+                                    )
                                 )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Button(
+                                Spacer(modifier = Modifier.width(VitaminDimens.PaddingSmall))
+                                FilterChip(
+                                    selected = newVitaminDosageUnit == DosageUnit.MG,
                                     onClick = { newVitaminDosageUnit = DosageUnit.MG },
-                                    shape = RoundedCornerShape(8.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = if (newVitaminDosageUnit == DosageUnit.MG)
-                                            VitaminColors.ProgressBarColor else VitaminColors.InputFieldBackground
+                                    label = { Text("мг", color = if (newVitaminDosageUnit == DosageUnit.MG) VitaminColors.White else VitaminColors.TextColor) },
+                                    modifier = Modifier.weight(1f),
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = VitaminColors.AccentColor,
+                                        selectedLabelColor = VitaminColors.White,
+                                        containerColor = VitaminColors.SecondaryBackground,
+                                        labelColor = VitaminColors.TextColor
                                     )
-                                ) {
-                                    Text(
-                                        text = "мг",
-                                        color = Color.White,
-                                        fontSize = 14.sp
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Button(
+                                )
+                                Spacer(modifier = Modifier.width(VitaminDimens.PaddingSmall))
+                                FilterChip(
+                                    selected = newVitaminDosageUnit == DosageUnit.G,
                                     onClick = { newVitaminDosageUnit = DosageUnit.G },
-                                    shape = RoundedCornerShape(8.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = if (newVitaminDosageUnit == DosageUnit.G)
-                                            VitaminColors.ProgressBarColor else VitaminColors.InputFieldBackground
+                                    label = { Text("г", color = if (newVitaminDosageUnit == DosageUnit.G) VitaminColors.White else VitaminColors.TextColor) },
+                                    modifier = Modifier.weight(1f),
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = VitaminColors.AccentColor,
+                                        selectedLabelColor = VitaminColors.White,
+                                        containerColor = VitaminColors.SecondaryBackground,
+                                        labelColor = VitaminColors.TextColor
                                     )
-                                ) {
-                                    Text(
-                                        text = "г",
-                                        color = Color.White,
-                                        fontSize = 14.sp
-                                    )
-                                }
+                                )
                             }
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(VitaminDimens.PaddingMedium))
                             Button(
                                 onClick = {
                                     val dosage = newVitaminDosage.toIntOrNull() ?: 0
@@ -367,13 +328,15 @@ fun VitaminScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(VitaminDimens.ButtonHeight),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = VitaminColors.ButtonBackground)
+                                shape = RoundedCornerShape(VitaminDimens.CardCornerRadius),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = VitaminColors.ButtonBackground,
+                                    contentColor = VitaminColors.ButtonContent
+                                )
                             ) {
                                 Text(
                                     text = "Добавить",
-                                    color = Color.White,
-                                    fontSize = 14.sp,
+                                    fontSize = VitaminDimens.TextLarge,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -400,6 +363,7 @@ fun VitaminScreen(
                         }
                     } else null
                 )
+                Spacer(modifier = Modifier.height(VitaminDimens.PaddingSmall))
             }
 
             item {
@@ -413,14 +377,16 @@ fun VitaminScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(VitaminDimens.ButtonHeight)
-                        .padding(top = VitaminDimens.PaddingMedium, bottom = VitaminDimens.PaddingMedium),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = VitaminColors.ButtonBackground)
+                        .padding(top = VitaminDimens.PaddingMedium, bottom = VitaminDimens.PaddingLarge),
+                    shape = RoundedCornerShape(VitaminDimens.CardCornerRadius),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = VitaminColors.ButtonBackground,
+                        contentColor = VitaminColors.ButtonContent
+                    )
                 ) {
                     Text(
                         text = "Выполнено",
-                        color = Color.White,
-                        fontSize = 14.sp,
+                        fontSize = VitaminDimens.TextLarge,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -471,306 +437,398 @@ fun VitaminItem(
     var editedDosageUnit by remember { mutableStateOf(vitamin.dosageUnit) }
 
     Surface(
+        color = VitaminColors.CardBackground,
+        shape = RoundedCornerShape(20.dp),
+        shadowElevation = VitaminDimens.CardElevation,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = VitaminDimens.PaddingSmall),
-        shape = RoundedCornerShape(VitaminDimens.CardCornerRadius),
-        color = VitaminColors.CardBackground,
-        shadowElevation = VitaminDimens.CardElevation
+            .padding(horizontal = VitaminDimens.PaddingMedium, vertical = VitaminDimens.PaddingSmall)
     ) {
-        Column(
-            modifier = Modifier.padding(VitaminDimens.PaddingMedium)
-        ) {
+        Column(modifier = Modifier.padding(VitaminDimens.CardPadding)) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { isExpanded = !isExpanded }
-                    .padding(bottom = if (isExpanded) VitaminDimens.PaddingSmall else 0.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .padding(vertical = VitaminDimens.PaddingSmall),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .size(VitaminDimens.VitaminBoxSize)
-                            .background(vitamin.color, shape = RoundedCornerShape(VitaminDimens.CardCornerRadius)),
+                            .size(VitaminDimens.VitaminIconSize)
+                            .background(
+                                color = vitamin.color.copy(alpha = 0.2f),
+                                shape = CircleShape
+                            )
+                            .padding(VitaminDimens.PaddingSmall),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = vitamin.name,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = VitaminColors.TextColor
+                        Icon(
+                            imageVector = getVitaminIcon(vitamin.name),
+                            contentDescription = vitamin.name,
+                            tint = vitamin.color,
+                            modifier = Modifier.size(VitaminDimens.VitaminIconInnerSize)
                         )
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(VitaminDimens.PaddingMedium))
                     Column {
                         Text(
-                            text = "Дозировка: ${vitamin.dosage} раз в день",
-                            fontSize = 14.sp,
-                            color = VitaminColors.TextColor
+                            text = "Витамин ${vitamin.name}",
+                            color = VitaminColors.White,
+                            fontSize = VitaminDimens.TextTitle,
+                            fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            text = "На приём: ${vitamin.dosageAmount} ${
-                                if (vitamin.dosageUnit == DosageUnit.MG) "мг" else "г"
-                            }",
-                            fontSize = 14.sp,
-                            color = VitaminColors.TextColor
+                            text = "${vitamin.dosageAmount} ${if (vitamin.dosageUnit == DosageUnit.MG) "мг" else "г"} · ${vitamin.dosage} раз/день",
+                            color = VitaminColors.TextColor,
+                            fontSize = VitaminDimens.TextMedium
                         )
                     }
                 }
-                Icon(
-                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = if (isExpanded) "Свернуть" else "Развернуть",
-                    tint = VitaminColors.TextColor
-                )
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "${(progress * 100).toInt()}%",
+                            color = vitamin.color,
+                            fontSize = VitaminDimens.TextLarge,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = "${takenDoses.toInt()}/$totalDoses",
+                            color = VitaminColors.TextColor,
+                            fontSize = VitaminDimens.TextSmall
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(VitaminDimens.PaddingMedium))
+
+                    Icon(
+                        imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp
+                        else Icons.Default.KeyboardArrowDown,
+                        contentDescription = null,
+                        tint = VitaminColors.White,
+                        modifier = Modifier.size(VitaminDimens.IconSize)
+                    )
+                }
             }
 
-            AnimatedVisibility(visible = isExpanded) {
-                Column {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Прогресс: ${(progress * 100).toInt()}%",
-                            fontSize = 14.sp,
-                            color = VitaminColors.TextColor
+            if (isExpanded) {
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(VitaminDimens.ProgressBarHeight)
+                        .padding(vertical = VitaminDimens.PaddingSmall),
+                    color = vitamin.color,
+                    trackColor = VitaminColors.SecondaryBackground,
+                )
+                WeekDaysView(
+                    daysOfWeek = daysOfWeek,
+                    intakeRecords = intakeRecords,
+                    maxDoses = vitamin.dosage,
+                    color = vitamin.color
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = VitaminDimens.PaddingMedium),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    OutlinedButton(
+                        onClick = { isEditing = !isEditing },
+                        modifier = Modifier.padding(end = VitaminDimens.PaddingSmall),
+                        shape = RoundedCornerShape(VitaminDimens.CardCornerRadius),
+                        border = BorderStroke(1.dp, vitamin.color),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = vitamin.color
                         )
-                        Row {
-                            IconButton(
-                                onClick = { isEditing = true }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Edit,
-                                    contentDescription = "Редактировать дозировку",
-                                    tint = VitaminColors.TextColor
-                                )
-                            }
-                            if (onDeleteVitamin != null) {
-                                Button(
-                                    onClick = onDeleteVitamin,
-                                    modifier = Modifier.height(VitaminDimens.ButtonHeight),
-                                    shape = RoundedCornerShape(8.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = VitaminColors.NotTakenColor)
-                                ) {
-                                    Text(
-                                        text = "Удалить",
-                                        color = Color.White,
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
-                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Редактировать",
+                            modifier = Modifier.size(VitaminDimens.SmallIconSize)
+                        )
+                        Spacer(modifier = Modifier.width(VitaminDimens.PaddingSmall))
+                        Text("Редактировать")
                     }
 
-                    if (isEditing) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            BasicTextField(
-                                value = editedDosage,
-                                onValueChange = { if (it.all { char -> char.isDigit() } && it.length <= 2) editedDosage = it },
-                                modifier = Modifier
-                                    .width(60.dp)
-                                    .background(VitaminColors.InputFieldBackground, RoundedCornerShape(8.dp))
-                                    .padding(12.dp),
-                                textStyle = androidx.compose.ui.text.TextStyle(
-                                    color = VitaminColors.TextColor,
-                                    fontSize = 16.sp
-                                ),
-                                singleLine = true,
-                                decorationBox = { innerTextField ->
-                                    if (editedDosage.isEmpty()) {
-                                        Text(
-                                            text = "Доза",
-                                            color = Color.Gray,
-                                            fontSize = 16.sp
-                                        )
-                                    }
-                                    innerTextField()
-                                }
+                    if (onDeleteVitamin != null) {
+                        OutlinedButton(
+                            onClick = onDeleteVitamin,
+                            shape = RoundedCornerShape(VitaminDimens.CardCornerRadius),
+                            border = BorderStroke(1.dp, VitaminColors.ErrorColor),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = Color.Transparent,
+                                contentColor = VitaminColors.ErrorColor
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            BasicTextField(
-                                value = editedDosageAmount,
-                                onValueChange = { if (it.all { char -> char.isDigit() || char == '.' } && it.length <= 6) editedDosageAmount = it },
-                                modifier = Modifier
-                                    .width(80.dp)
-                                    .background(VitaminColors.InputFieldBackground, RoundedCornerShape(8.dp))
-                                    .padding(12.dp),
-                                textStyle = androidx.compose.ui.text.TextStyle(
-                                    color = VitaminColors.TextColor,
-                                    fontSize = 16.sp
-                                ),
-                                singleLine = true,
-                                decorationBox = { innerTextField ->
-                                    if (editedDosageAmount.isEmpty()) {
-                                        Text(
-                                            text = "Кол-во",
-                                            color = Color.Gray,
-                                            fontSize = 16.sp
-                                        )
-                                    }
-                                    innerTextField()
-                                }
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(
-                                onClick = { editedDosageUnit = DosageUnit.MG },
-                                shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (editedDosageUnit == DosageUnit.MG)
-                                        VitaminColors.ProgressBarColor else VitaminColors.InputFieldBackground
-                                )
-                            ) {
-                                Text(
-                                    text = "мг",
-                                    color = Color.White,
-                                    fontSize = 14.sp
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(
-                                onClick = { editedDosageUnit = DosageUnit.G },
-                                shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (editedDosageUnit == DosageUnit.G)
-                                        VitaminColors.ProgressBarColor else VitaminColors.InputFieldBackground
-                                )
-                            ) {
-                                Text(
-                                    text = "г",
-                                    color = Color.White,
-                                    fontSize = 14.sp
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Button(
-                            onClick = {
-                                val dosage = editedDosage.toIntOrNull() ?: 0
-                                val dosageAmount = editedDosageAmount.toFloatOrNull() ?: 0f
-                                if (dosage > 0 && dosageAmount > 0) {
-                                    onDosageChange(dosage, dosageAmount, editedDosageUnit)
-                                    isEditing = false
-                                }
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(VitaminDimens.ButtonHeight),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = VitaminColors.ButtonBackground)
                         ) {
-                            Text(
-                                text = "Сохранить",
-                                color = Color.White,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Удалить",
+                                modifier = Modifier.size(VitaminDimens.SmallIconSize)
                             )
+                            Spacer(modifier = Modifier.width(VitaminDimens.PaddingSmall))
+                            Text("Удалить")
                         }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-                    CircularProgressIndicator(
-                        progress = { progress },
-                        modifier = Modifier
-                            .size(VitaminDimens.ProgressBarSize)
-                            .align(Alignment.CenterHorizontally),
-                        color = VitaminColors.ProgressBarColor,
-                        strokeWidth = 6.dp
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    daysOfWeek.forEach { day ->
-                        val dayKey = day.toString()
-                        val intakeList = intakeRecords.getOrPut(dayKey) { mutableStateListOf() }
-                        val intakeCount by derivedStateOf { intakeList.size }
-                        val maxDosesToday = vitamin.dosage
-                        val isTaken = intakeCount >= maxDosesToday
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(VitaminDimens.DayCircleSize)
-                                        .background(
-                                            if (isTaken) VitaminColors.TakenColor else VitaminColors.NotTakenColor,
-                                            shape = RoundedCornerShape(50)
-                                        ),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = day.dayOfWeek.getDisplayName(JavaTextStyle.SHORT, Locale.getDefault()),
-                                        fontSize = 12.sp,
-                                        color = Color.White
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "Принято: $intakeCount из $maxDosesToday",
-                                    fontSize = 14.sp,
-                                    color = VitaminColors.TextColor
-                                )
-                            }
-                            Button(
-                                onClick = {
-                                    if (!isTaken) {
-                                        intakeList.add(day)
-                                    }
-                                },
-                                modifier = Modifier
-                                    .height(VitaminDimens.ButtonHeight)
-                                    .width(100.dp),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (isTaken)
-                                        VitaminColors.InputFieldBackground else VitaminColors.ButtonBackground
-                                ),
-                                enabled = !isTaken
-                            ) {
-                                Text(
-                                    text = "Принять",
-                                    color = Color.White,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(
-                        onClick = {
-                            intakeRecords.clear()
-                            daysOfWeek.forEach { day ->
-                                intakeRecords[day.toString()] = mutableStateListOf()
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(VitaminDimens.ButtonHeight),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = VitaminColors.ButtonBackground)
-                    ) {
-                        Text(
-                            text = "Выполнено",
-                            color = Color.White,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
-                        )
                     }
                 }
+
+                if (isEditing) {
+                    VitaminEditForm(
+                        editedDosage = editedDosage,
+                        editedDosageAmount = editedDosageAmount,
+                        editedDosageUnit = editedDosageUnit,
+                        onDosageChange = { editedDosage = it },
+                        onDosageAmountChange = { editedDosageAmount = it },
+                        onDosageUnitChange = { editedDosageUnit = it },
+                        onSave = {
+                            val dosage = editedDosage.toIntOrNull() ?: 0
+                            val dosageAmount = editedDosageAmount.toFloatOrNull() ?: 0f
+                            if (dosage > 0 && dosageAmount > 0) {
+                                onDosageChange(dosage, dosageAmount, editedDosageUnit)
+                                isEditing = false
+                            }
+                        },
+                        onCancel = { isEditing = false }
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Отображает дни недели с индикаторами приёма витаминов.
+ *
+ * @param daysOfWeek Список дней недели.
+ * @param intakeRecords Записи о приёмах.
+ * @param maxDoses Максимальное количество приёмов в день.
+ * @param color Цвет индикаторов.
+ */
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun WeekDaysView(
+    daysOfWeek: List<LocalDate>,
+    intakeRecords: SnapshotStateMap<String, SnapshotStateList<LocalDate>>,
+    maxDoses: Int,
+    color: Color
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = VitaminDimens.PaddingSmall),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        daysOfWeek.forEach { day ->
+            val dayKey = day.toString()
+            val intakeList = intakeRecords.getOrPut(dayKey) { mutableStateListOf() }
+            val intakeCount by derivedStateOf { intakeList.size }
+            val isTaken = intakeCount >= maxDoses
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.width(VitaminDimens.DayCircleSize)
+            ) {
+                Text(
+                    text = day.dayOfWeek.getDisplayName(JavaTextStyle.SHORT, Locale.getDefault()),
+                    color = VitaminColors.TextColor,
+                    fontSize = VitaminDimens.TextSmall
+                )
+
+                Spacer(modifier = Modifier.height(VitaminDimens.PaddingSmall))
+
+                Box(
+                    modifier = Modifier
+                        .size(VitaminDimens.DayCircleSize)
+                        .clip(CircleShape)
+                        .background(
+                            if (isTaken) color.copy(alpha = 0.2f)
+                            else VitaminColors.SecondaryBackground
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = if (isTaken) color else VitaminColors.AccentColor,
+                            shape = CircleShape
+                        )
+                        .clickable {
+                            if (!isTaken) {
+                                intakeList.add(day)
+                            }
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = if (isTaken) Icons.Default.Check else Icons.Default.Add,
+                        contentDescription = if (isTaken) "Принято" else "Принять",
+                        tint = if (isTaken) color else VitaminColors.White,
+                        modifier = Modifier.size(VitaminDimens.SmallIconSize)
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Возвращает иконку для соответствующего витамина.
+ *
+ * @param vitaminName Название витамина.
+ * @return ImageVector соответствующей иконки.
+ */
+@Composable
+fun getVitaminIcon(vitaminName: String): ImageVector {
+    return when(vitaminName) {
+        "A" -> Icons.Default.Lens
+        "B1" -> Icons.Default.Bolt
+        "B2" -> Icons.Default.FlashOn
+        "B3" -> Icons.Default.Whatshot
+        "B5" -> Icons.Default.Spa
+        "B6" -> Icons.Default.Nature
+        "B12" -> Icons.Default.Science
+        "C" -> Icons.Default.LocalDrink
+        "D" -> Icons.Default.WbSunny
+        "E" -> Icons.Default.Spa
+        "K" -> Icons.Default.Healing
+        else -> Icons.Default.MedicalServices
+    }
+}
+
+/**
+ * Форма редактирования дозировки витамина.
+ *
+ * @param editedDosage Текущее количество приёмов.
+ * @param editedDosageAmount Текущая дозировка.
+ * @param editedDosageUnit Текущая единица измерения.
+ * @param onDosageChange Обработчик изменения количества приёмов.
+ * @param onDosageAmountChange Обработчик изменения дозировки.
+ * @param onDosageUnitChange Обработчик изменения единицы измерения.
+ * @param onSave Обработчик сохранения.
+ * @param onCancel Обработчик отмены.
+ */
+@Composable
+fun VitaminEditForm(
+    editedDosage: String,
+    editedDosageAmount: String,
+    editedDosageUnit: DosageUnit,
+    onDosageChange: (String) -> Unit,
+    onDosageAmountChange: (String) -> Unit,
+    onDosageUnitChange: (DosageUnit) -> Unit,
+    onSave: () -> Unit,
+    onCancel: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = VitaminDimens.PaddingMedium)
+    ) {
+        Text(
+            text = "Редактировать дозировку",
+            color = VitaminColors.White,
+            fontSize = VitaminDimens.TextLarge,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.padding(bottom = VitaminDimens.PaddingSmall)
+        )
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            OutlinedTextField(
+                value = editedDosage,
+                onValueChange = { if (it.all { char -> char.isDigit() } && it.length <= 2) onDosageChange(it) },
+                modifier = Modifier.weight(1f),
+                label = { Text("Приемов в день", color = VitaminColors.TextColor) },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = VitaminColors.SecondaryBackground,
+                    unfocusedContainerColor = VitaminColors.SecondaryBackground,
+                    focusedTextColor = VitaminColors.White,
+                    unfocusedTextColor = VitaminColors.White
+                )
+            )
+
+            Spacer(modifier = Modifier.width(VitaminDimens.PaddingSmall))
+
+            OutlinedTextField(
+                value = editedDosageAmount,
+                onValueChange = { if (it.all { char -> char.isDigit() || char == '.' } && it.length <= 6) onDosageAmountChange(it) },
+                modifier = Modifier.weight(1f),
+                label = { Text("Дозировка", color = VitaminColors.TextColor) },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = VitaminColors.SecondaryBackground,
+                    unfocusedContainerColor = VitaminColors.SecondaryBackground,
+                    focusedTextColor = VitaminColors.White,
+                    unfocusedTextColor = VitaminColors.White
+                )
+            )
+        }
+
+        Spacer(modifier = Modifier.height(VitaminDimens.PaddingSmall))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            FilterChip(
+                selected = editedDosageUnit == DosageUnit.MG,
+                onClick = { onDosageUnitChange(DosageUnit.MG) },
+                label = { Text("мг", color = if (editedDosageUnit == DosageUnit.MG) VitaminColors.White else VitaminColors.TextColor) },
+                modifier = Modifier.weight(1f),
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = VitaminColors.AccentColor,
+                    selectedLabelColor = VitaminColors.White,
+                    containerColor = VitaminColors.SecondaryBackground,
+                    labelColor = VitaminColors.TextColor
+                )
+            )
+
+            Spacer(modifier = Modifier.width(VitaminDimens.PaddingSmall))
+
+            FilterChip(
+                selected = editedDosageUnit == DosageUnit.G,
+                onClick = { onDosageUnitChange(DosageUnit.G) },
+                label = { Text("г", color = if (editedDosageUnit == DosageUnit.G) VitaminColors.White else VitaminColors.TextColor) },
+                modifier = Modifier.weight(1f),
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = VitaminColors.AccentColor,
+                    selectedLabelColor = VitaminColors.White,
+                    containerColor = VitaminColors.SecondaryBackground,
+                    labelColor = VitaminColors.TextColor
+                )
+            )
+        }
+        Spacer(modifier = Modifier.height(VitaminDimens.PaddingMedium))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            OutlinedButton(
+                onClick = onCancel,
+                modifier = Modifier.padding(end = VitaminDimens.PaddingSmall),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, Color(0xFF6650a4)),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = Color(0xFF6650a4))
+            ) {
+                Text("Отмена")
+            }
+
+            Button(
+                onClick = onSave,
+                enabled = editedDosage.isNotBlank() && editedDosageAmount.isNotBlank(),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF6650a4),
+                    contentColor = Color.White
+                )
+            ) {
+                Text("Сохранить")
             }
         }
     }
