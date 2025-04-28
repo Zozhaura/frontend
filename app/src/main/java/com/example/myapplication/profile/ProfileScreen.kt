@@ -6,19 +6,8 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,23 +15,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,35 +33,49 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.example.myapplication.AppColors
 import com.example.myapplication.R
 import com.example.myapplication.utils.TokenManager
 import com.google.gson.Gson
 import java.io.File
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
 /**
  * Объект, содержащий цвета, используемые в приложении.
  */
-object AppColors {
-    val DarkBackground = Color(0xFF494358)
-    val DarkCard = Color(0xFF3A3A3A)
-    val OrangeAccent = Color(0xFFFFA500)
-    val LightGrayBorder = Color(0xFFD1C4E9)
-    val SemiTransparentWhite = Color(0x9AFFFFFF)
-    val LoadingColor = Color(0xFF9575CD)
+object ProfileColors {
+    val CardBackground = Color(0xFF3A3347)
+    val TextColor = Color.LightGray
+    val White = Color.White
+    val AccentColor = Color(0xFFFF5722)
+    val SecondaryBackground = Color(0x2ABD3300)
+    val ErrorColor = Color(0xFFFF2922)
+    val LoadingColor = Color(0xFFBB86FC)
+    val BorderColor = Color(0xFFFF5722)
+    val ButtonContent = Color.White
 }
 
 /**
  * Объект, содержащий размеры элементов интерфейса.
  */
-object AppDimens {
-    val ProfileImageSize = 150.dp
-    val InputFontSize = 15.sp
-    val ButtonPadding = 2.dp
-    val CardPadding = 2.dp
-    val CornerRadius = 16.dp
+object ProfileDimens {
+    val PaddingSmall = 8.dp
+    val PaddingMedium = 16.dp
+
+    val CardCornerRadius = 16.dp
+    val CardElevation = 8.dp
+    val CardPadding = 16.dp
+
+    val ProfileImageSize = 120.dp
+    val SmallIconSize = 20.dp
+    val IconSize = 24.dp
+    val ButtonHeight = 48.dp
+
+    val TextSmall = 14.sp
+    val TextMedium = 16.sp
+    val TextTitle = 28.sp
+    val InputTextSize = 16.sp
 }
 
 /**
@@ -112,12 +100,14 @@ fun ProfileScreen(
     val errorMessage by viewModel.errorMessage
     val isLoading by viewModel.isLoading
     val isUpdating by viewModel.isUpdating
+
     var name by remember { mutableStateOf("") }
     var height by remember { mutableStateOf("") }
     var weight by remember { mutableStateOf("") }
     var goalWeight by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var avatarUri by remember { mutableStateOf<Uri?>(null) }
+
     var nameError by remember { mutableStateOf<String?>(null) }
     var heightError by remember { mutableStateOf<String?>(null) }
     var weightError by remember { mutableStateOf<String?>(null) }
@@ -161,7 +151,7 @@ fun ProfileScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp),
+                .padding(ProfileDimens.PaddingMedium),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(
@@ -170,31 +160,27 @@ fun ProfileScreen(
                         popUpTo("profile") { inclusive = true }
                     }
                 },
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(ProfileDimens.IconSize)
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Назад на главный экран",
-                    tint = AppColors.SemiTransparentWhite
+                    tint = ProfileColors.TextColor
                 )
             }
         }
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(AppColors.DarkBackground)
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
             if (isLoading && userResponse == null) {
                 CircularProgressIndicator(
-                    color = AppColors.LoadingColor,
+                    color = ProfileColors.LoadingColor,
                     modifier = Modifier.align(Alignment.Center)
                 )
             } else {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(AppDimens.ButtonPadding),
+                        .padding(ProfileDimens.PaddingMedium),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     item {
@@ -209,7 +195,7 @@ fun ProfileScreen(
                                 Icon(
                                     painter = painterResource(id = R.drawable.arrow_back),
                                     contentDescription = stringResource(R.string.back_button_description),
-                                    tint = Color.White
+                                    tint = ProfileColors.White
                                 )
                             }
                         }
@@ -219,39 +205,41 @@ fun ProfileScreen(
                             onEditClick = { pickImageLauncher.launch("image/*") }
                         )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(ProfileDimens.PaddingMedium))
 
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = AppDimens.CardPadding),
-                            shape = RoundedCornerShape(AppDimens.CornerRadius),
-                            color = AppColors.DarkCard
+                                .padding(horizontal = ProfileDimens.PaddingMedium),
+                            shape = RoundedCornerShape(ProfileDimens.CardCornerRadius),
+                            color = ProfileColors.CardBackground,
+                            shadowElevation = ProfileDimens.CardElevation
                         ) {
                             Column(
-                                modifier = Modifier.padding(10.dp),
+                                modifier = Modifier.padding(ProfileDimens.CardPadding),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                ProfileText(
+                                Text(
                                     text = if (name.isNotBlank()) name else "Имя не указано",
-                                    fontSize = 28.sp,
+                                    color = ProfileColors.White,
+                                    fontSize = ProfileDimens.TextTitle,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(ProfileDimens.PaddingMedium))
                     }
 
                     item {
                         Surface(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = AppDimens.CardPadding),
-                            shape = RoundedCornerShape(AppDimens.CornerRadius),
-                            color = AppColors.DarkCard
+                                .fillMaxWidth(),
+                            shape = RoundedCornerShape(ProfileDimens.CardCornerRadius),
+                            color = ProfileColors.CardBackground,
+                            shadowElevation = ProfileDimens.CardElevation
                         ) {
-                            Column(modifier = Modifier.padding(12.dp)) {
+                            Column(modifier = Modifier.padding(ProfileDimens.CardPadding)) {
                                 ProfileInputField(
                                     value = name,
                                     onValueChange = {
@@ -260,9 +248,13 @@ fun ProfileScreen(
                                         nameError = validateName(filtered, context)
                                     },
                                     label = "Имя",
-                                    textStyle = TextStyle(color = Color.White, fontSize = AppDimens.InputFontSize),
+                                    textStyle = TextStyle(
+                                        color = ProfileColors.White,
+                                        fontSize = ProfileDimens.InputTextSize
+                                    ),
                                     errorMessage = nameError
                                 )
+
                                 ProfileInputField(
                                     value = height,
                                     onValueChange = {
@@ -272,9 +264,13 @@ fun ProfileScreen(
                                     },
                                     label = "Рост (см)",
                                     keyboardType = KeyboardType.Number,
-                                    textStyle = TextStyle(color = Color.White, fontSize = AppDimens.InputFontSize),
+                                    textStyle = TextStyle(
+                                        color = ProfileColors.White,
+                                        fontSize = ProfileDimens.InputTextSize
+                                    ),
                                     errorMessage = heightError
                                 )
+
                                 ProfileInputField(
                                     value = weight,
                                     onValueChange = {
@@ -284,9 +280,13 @@ fun ProfileScreen(
                                     },
                                     label = "Вес (кг)",
                                     keyboardType = KeyboardType.Number,
-                                    textStyle = TextStyle(color = Color.White, fontSize = AppDimens.InputFontSize),
+                                    textStyle = TextStyle(
+                                        color = ProfileColors.White,
+                                        fontSize = ProfileDimens.InputTextSize
+                                    ),
                                     errorMessage = weightError
                                 )
+
                                 ProfileInputField(
                                     value = goalWeight,
                                     onValueChange = {
@@ -296,13 +296,16 @@ fun ProfileScreen(
                                     },
                                     label = "Цель веса (кг)",
                                     keyboardType = KeyboardType.Number,
-                                    textStyle = TextStyle(color = Color.White, fontSize = AppDimens.InputFontSize),
+                                    textStyle = TextStyle(
+                                        color = ProfileColors.White,
+                                        fontSize = ProfileDimens.InputTextSize
+                                    ),
                                     errorMessage = goalWeightError
                                 )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(5.dp))
+                        Spacer(modifier = Modifier.height(ProfileDimens.PaddingMedium))
                     }
 
                     item {
@@ -335,30 +338,31 @@ fun ProfileScreen(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = AppDimens.CardPadding, vertical = AppDimens.ButtonPadding)
-                                .height(48.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = AppColors.OrangeAccent),
-                            shape = RoundedCornerShape(AppDimens.CornerRadius),
+                                .height(ProfileDimens.ButtonHeight),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = ProfileColors.AccentColor,
+                                contentColor = ProfileColors.ButtonContent
+                            ),
+                            shape = RoundedCornerShape(ProfileDimens.CardCornerRadius),
                             enabled = !isUpdating
                         ) {
                             if (isUpdating) {
                                 CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    color = AppColors.SemiTransparentWhite
+                                    modifier = Modifier.size(ProfileDimens.SmallIconSize),
+                                    color = ProfileColors.ButtonContent
                                 )
                             } else {
                                 Text(
                                     text = "Сохранить",
-                                    color = AppColors.SemiTransparentWhite,
-                                    fontSize = 14.sp,
+                                    fontSize = ProfileDimens.TextMedium,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(3.dp))
+                        Spacer(modifier = Modifier.height(ProfileDimens.PaddingSmall))
 
-                        Button(
+                        OutlinedButton(
                             onClick = {
                                 TokenManager.clearToken(context)
                                 Toast.makeText(context, context.getString(R.string.logout_success), Toast.LENGTH_SHORT).show()
@@ -368,20 +372,22 @@ fun ProfileScreen(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = AppDimens.CardPadding, vertical = AppDimens.ButtonPadding)
-                                .height(48.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = AppColors.OrangeAccent),
-                            shape = RoundedCornerShape(AppDimens.CornerRadius)
+                                .height(ProfileDimens.ButtonHeight),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = Color.Transparent,
+                                contentColor = ProfileColors.ErrorColor
+                            ),
+                            border = BorderStroke(1.dp, ProfileColors.ErrorColor),
+                            shape = RoundedCornerShape(ProfileDimens.CardCornerRadius)
                         ) {
                             Text(
                                 text = "Выйти из аккаунта",
-                                color = AppColors.SemiTransparentWhite,
-                                fontSize = 14.sp,
+                                fontSize = ProfileDimens.TextMedium,
                                 fontWeight = FontWeight.Bold
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(ProfileDimens.PaddingMedium))
                     }
                 }
             }
@@ -399,10 +405,10 @@ fun ProfileScreen(
 fun ProfileImageSection(avatarUri: Uri?, onEditClick: () -> Unit) {
     Box(
         modifier = Modifier
-            .size(AppDimens.ProfileImageSize)
+            .size(ProfileDimens.ProfileImageSize)
             .clip(CircleShape)
-            .background(AppColors.DarkCard)
-            .border(2.dp, AppColors.OrangeAccent, CircleShape)
+            .background(ProfileColors.SecondaryBackground)
+            .border(2.dp, ProfileColors.AccentColor, CircleShape)
     ) {
         Image(
             painter = if (avatarUri != null) {
@@ -414,18 +420,19 @@ fun ProfileImageSection(avatarUri: Uri?, onEditClick: () -> Unit) {
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
+
         IconButton(
             onClick = onEditClick,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .offset((-16).dp, (-16).dp)
-                .size(20.dp)
-                .background(AppColors.OrangeAccent, CircleShape)
+                .size(ProfileDimens.SmallIconSize)
+                .background(ProfileColors.AccentColor, CircleShape)
         ) {
             Icon(
                 imageVector = Icons.Default.Edit,
                 contentDescription = "Edit Avatar",
-                tint = AppColors.SemiTransparentWhite
+                tint = ProfileColors.ButtonContent
             )
         }
     }
@@ -476,27 +483,34 @@ fun ProfileInputField(
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            label = { Text(text = label, color = AppColors.SemiTransparentWhite) },
+            label = { Text(text = label, color = ProfileColors.TextColor) },
             textStyle = textStyle,
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = AppDimens.CardPadding),
-            shape = RoundedCornerShape(12.dp),
+                .padding(vertical = ProfileDimens.PaddingSmall),
+            shape = RoundedCornerShape(ProfileDimens.CardCornerRadius),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = AppColors.OrangeAccent,
-                unfocusedBorderColor = AppColors.LightGrayBorder,
-                errorBorderColor = Color.Red
+                focusedBorderColor = ProfileColors.AccentColor,
+                unfocusedBorderColor = ProfileColors.BorderColor,
+                errorBorderColor = ProfileColors.ErrorColor,
+                focusedContainerColor = ProfileColors.SecondaryBackground,
+                unfocusedContainerColor = ProfileColors.SecondaryBackground,
+                focusedTextColor = ProfileColors.White,
+                unfocusedTextColor = ProfileColors.White,
+                focusedLabelColor = ProfileColors.TextColor,
+                unfocusedLabelColor = ProfileColors.TextColor
             ),
             isError = errorMessage != null
         )
+
         AnimatedVisibility(visible = errorMessage != null) {
             errorMessage?.let {
                 Text(
                     text = it,
-                    color = MaterialTheme.colorScheme.error,
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(start = 10.dp, top = 2.dp)
+                    color = ProfileColors.ErrorColor,
+                    fontSize = ProfileDimens.TextSmall,
+                    modifier = Modifier.padding(start = ProfileDimens.PaddingSmall)
                 )
             }
         }
