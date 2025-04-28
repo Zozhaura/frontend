@@ -1,36 +1,19 @@
 package com.example.myapplication.pulse
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.*
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -40,26 +23,39 @@ import androidx.navigation.NavController
 import com.example.myapplication.R
 
 /**
- * Объект, содержащий цвета, используемые в интерфейсе.
+ * Объект, содержащий цвета, используемые на экране пульса.
  */
-object AppColors {
-    val CardBackground = Color(0xFF494358)
-    val HeartBackground = Color(0xB4615977)
+object PulseColors {
+    val CardBackground = Color(0xFF3A3347)
     val TextColor = Color.LightGray
-    val ButtonColor = Color(0xFF494358)
+    val White = Color.White
+    val HeartColor = Color(0xFFFF5252)
+    val ButtonBorder = Color(0xFFCE7B7B)
+    val ButtonContent = Color(0xFFFF9999)
 }
 
 /**
- * Объект, содержащий размеры элементов интерфейса.
+ * Объект, содержащий размеры элементов интерфейса экрана пульса.
  */
-object AppDimens {
+object PulseDimens {
     val PaddingSmall = 8.dp
     val PaddingMedium = 16.dp
-    val HeartSize = 375.dp
-    val ButtonHeight = 56.dp
-    val ButtonPadding = 32.dp
+    val PaddingLarge = 24.dp
+
     val CardCornerRadius = 16.dp
-    val CardElevation = 4.dp
+    val CardElevation = 8.dp
+    val StatsCardHeight = 80.dp
+
+    val IconSize = 24.dp
+    val SmallIconSize = 20.dp
+    val HeartSize = 240.dp
+    val HeartContainerSize = 240.dp
+    val ButtonHeight = 48.dp
+
+    val TextSmall = 14.sp
+    val TextMedium = 16.sp
+    val TextLarge = 18.sp
+    val TextTitle = 42.sp
 }
 
 /**
@@ -80,12 +76,13 @@ fun PulseScreen(
     val minPulse = viewModel.minPulse.collectAsState()
 
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp),
+                .padding(PulseDimens.PaddingMedium),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(
@@ -94,12 +91,12 @@ fun PulseScreen(
                         popUpTo("pulse") { inclusive = true }
                     }
                 },
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(PulseDimens.IconSize)
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Назад на главный экран",
-                    tint = AppColors.TextColor
+                    tint = PulseColors.TextColor
                 )
             }
         }
@@ -107,34 +104,60 @@ fun PulseScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(AppDimens.PaddingMedium),
+                .padding(PulseDimens.PaddingMedium),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "ВАШ ТЕКУЩИЙ ПУЛЬС",
-                fontSize = 24.sp,
+                text = "ТЕКУЩИЙ ПУЛЬС",
+                fontSize = PulseDimens.TextLarge,
                 fontWeight = FontWeight.Bold,
-                color = AppColors.TextColor,
-                modifier = Modifier.padding(bottom = AppDimens.PaddingMedium)
+                color = PulseColors.TextColor,
+                letterSpacing = 1.sp,
+                modifier = Modifier.padding(bottom = PulseDimens.PaddingSmall)
             )
+
             HeartPulseBlock(currentPulse.value)
-            PulseInfoBlock("Максимальный пульс за день: ${maxPulse.value}")
-            PulseInfoBlock("Минимальный пульс за день: ${minPulse.value}")
-            Button(
+
+            Spacer(modifier = Modifier.height(PulseDimens.PaddingMedium))
+
+            PulseStatsCard(
+                title = "МАКСИМАЛЬНЫЙ",
+                value = maxPulse.value,
+                icon = Icons.Default.ArrowUpward,
+                modifier = Modifier.padding(bottom = PulseDimens.PaddingSmall)
+            )
+
+            PulseStatsCard(
+                title = "МИНИМАЛЬНЫЙ",
+                value = minPulse.value,
+                icon = Icons.Default.ArrowDownward,
+                modifier = Modifier.padding(bottom = PulseDimens.PaddingLarge)
+            )
+
+            OutlinedButton(
                 onClick = { navController.navigate("vitamin") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(AppDimens.ButtonHeight)
-                    .padding(horizontal = AppDimens.ButtonPadding),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = AppColors.ButtonColor
+                    .height(PulseDimens.ButtonHeight)
+                    .padding(horizontal = PulseDimens.PaddingLarge),
+                shape = RoundedCornerShape(PulseDimens.CardCornerRadius),
+                border = BorderStroke(1.dp, PulseColors.ButtonBorder),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = PulseColors.ButtonContent
                 )
             ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_heart),
+                    contentDescription = "Витамины",
+                    modifier = Modifier.size(PulseDimens.SmallIconSize),
+                    tint = PulseColors.ButtonContent
+                )
+                Spacer(modifier = Modifier.width(PulseDimens.PaddingSmall))
                 Text(
                     text = "ДАННЫЕ О ВИТАМИНАХ",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    fontSize = PulseDimens.TextMedium,
+                    color = PulseColors.ButtonContent
                 )
             }
         }
@@ -153,7 +176,7 @@ fun HeartPulseBlock(currentPulse: Int) {
     val infiniteTransition = rememberInfiniteTransition()
     val scale by infiniteTransition.animateFloat(
         initialValue = 1f,
-        targetValue = 1.1f,
+        targetValue = 1.05f,
         animationSpec = infiniteRepeatable(
             animation = tween(
                 durationMillis = pulseDuration / 2,
@@ -163,56 +186,90 @@ fun HeartPulseBlock(currentPulse: Int) {
         )
     )
 
-    Surface(
-        modifier = Modifier
-            .size(AppDimens.HeartSize)
-            .padding(bottom = AppDimens.PaddingMedium),
-        shape = RoundedCornerShape(AppDimens.CardCornerRadius),
-        color = AppColors.HeartBackground,
-        shadowElevation = AppDimens.CardElevation
+    Box(
+        modifier = Modifier.size(PulseDimens.HeartContainerSize),
+        contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+        Image(
+            painter = painterResource(id = R.drawable.ic_heart),
+            contentDescription = "Сердце",
+            modifier = Modifier
+                .size(PulseDimens.HeartSize)
+                .scale(scale),
+            colorFilter = ColorFilter.tint(PulseColors.HeartColor)
+        )
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_heart),
-                contentDescription = "Heart Icon",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .scale(scale)
-            )
             Text(
                 text = currentPulse.toString(),
-                fontSize = 55.sp,
+                fontSize = PulseDimens.TextTitle,
                 fontWeight = FontWeight.Bold,
-                color = AppColors.TextColor,
-                modifier = Modifier.align(Alignment.Center)
+                color = PulseColors.TextColor
+            )
+            Text(
+                text = "уд/мин",
+                fontSize = PulseDimens.TextSmall,
+                color = PulseColors.TextColor.copy(alpha = 0.7f)
             )
         }
     }
 }
 
 /**
- * Компонент для отображения информации о пульсе.
+ * Карточка для отображения статистики пульса (максимального/минимального).
  *
- * @param text Текст для отображения (например, максимальный или минимальный пульс).
+ * @param title Заголовок карточки.
+ * @param value Значение пульса.
+ * @param icon Иконка для отображения.
+ * @param modifier Модификатор для настройки внешнего вида.
  */
 @Composable
-fun PulseInfoBlock(text: String) {
+fun PulseStatsCard(
+    title: String,
+    value: Int,
+    icon: ImageVector,
+    modifier: Modifier = Modifier
+) {
     Surface(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(bottom = AppDimens.PaddingSmall),
-        shape = RoundedCornerShape(AppDimens.CardCornerRadius),
-        color = AppColors.CardBackground,
-        shadowElevation = AppDimens.CardElevation
+            .height(PulseDimens.StatsCardHeight),
+        shape = RoundedCornerShape(PulseDimens.CardCornerRadius),
+        color = PulseColors.CardBackground,
+        border = BorderStroke(1.dp, PulseColors.TextColor.copy(alpha = 0.2f)),
+        shadowElevation = PulseDimens.CardElevation
     ) {
-        Text(
-            text = text,
-            fontSize = 18.sp,
-            color = AppColors.TextColor,
-            modifier = Modifier.padding(AppDimens.PaddingMedium)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = PulseDimens.PaddingLarge),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = title,
+                    tint = PulseColors.TextColor,
+                    modifier = Modifier.size(PulseDimens.IconSize)
+                )
+                Spacer(modifier = Modifier.width(PulseDimens.PaddingMedium))
+                Text(
+                    text = title,
+                    fontSize = PulseDimens.TextMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = PulseColors.TextColor
+                )
+            }
+
+            Text(
+                text = "$value",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = PulseColors.TextColor
+            )
+        }
     }
 }
