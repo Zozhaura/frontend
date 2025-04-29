@@ -365,32 +365,6 @@ fun VitaminScreen(
                 )
                 Spacer(modifier = Modifier.height(VitaminDimens.PaddingSmall))
             }
-
-            item {
-                Button(
-                    onClick = {
-                        intakeRecordsMap.clear()
-                        vitamins.forEach { vitamin ->
-                            intakeRecordsMap[vitamin] = mutableStateMapOf()
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(VitaminDimens.ButtonHeight)
-                        .padding(top = VitaminDimens.PaddingMedium, bottom = VitaminDimens.PaddingLarge),
-                    shape = RoundedCornerShape(VitaminDimens.CardCornerRadius),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = VitaminColors.ButtonBackground,
-                        contentColor = VitaminColors.ButtonContent
-                    )
-                ) {
-                    Text(
-                        text = "Выполнено",
-                        fontSize = VitaminDimens.TextLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
         }
     }
 }
@@ -534,45 +508,62 @@ fun VitaminItem(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = VitaminDimens.PaddingMedium),
-                    horizontalArrangement = Arrangement.End
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    OutlinedButton(
-                        onClick = { isEditing = !isEditing },
-                        modifier = Modifier.padding(end = VitaminDimens.PaddingSmall),
-                        shape = RoundedCornerShape(VitaminDimens.CardCornerRadius),
-                        border = BorderStroke(1.dp, vitamin.color),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = Color.Transparent,
-                            contentColor = vitamin.color
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Редактировать",
-                            modifier = Modifier.size(VitaminDimens.SmallIconSize)
-                        )
-                        Spacer(modifier = Modifier.width(VitaminDimens.PaddingSmall))
-                        Text("Редактировать")
-                    }
-
-                    if (onDeleteVitamin != null) {
+                    Row {
                         OutlinedButton(
-                            onClick = onDeleteVitamin,
+                            onClick = { isEditing = !isEditing },
+                            modifier = Modifier.padding(end = VitaminDimens.PaddingSmall),
                             shape = RoundedCornerShape(VitaminDimens.CardCornerRadius),
-                            border = BorderStroke(1.dp, VitaminColors.ErrorColor),
+                            border = BorderStroke(1.dp, vitamin.color),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 containerColor = Color.Transparent,
-                                contentColor = VitaminColors.ErrorColor
+                                contentColor = vitamin.color
                             )
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Удалить",
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Редактировать",
                                 modifier = Modifier.size(VitaminDimens.SmallIconSize)
                             )
                             Spacer(modifier = Modifier.width(VitaminDimens.PaddingSmall))
-                            Text("Удалить")
+                            Text("Редактировать")
                         }
+
+                        if (onDeleteVitamin != null) {
+                            OutlinedButton(
+                                onClick = onDeleteVitamin,
+                                shape = RoundedCornerShape(VitaminDimens.CardCornerRadius),
+                                border = BorderStroke(1.dp, VitaminColors.ErrorColor),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    containerColor = Color.Transparent,
+                                    contentColor = VitaminColors.ErrorColor
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Удалить",
+                                    modifier = Modifier.size(VitaminDimens.SmallIconSize)
+                                )
+                                Spacer(modifier = Modifier.width(VitaminDimens.PaddingSmall))
+                                Text("Удалить")
+                            }
+                        }
+                    }
+                    Button(
+                        onClick = {
+                            intakeRecords.clear()
+                        },
+                        modifier = Modifier
+                            .widthIn(min = 100.dp),
+                        shape = RoundedCornerShape(VitaminDimens.CardCornerRadius),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = vitamin.color,
+                            contentColor = VitaminColors.White
+                        )
+                    ) {
+                        Text("Выполнено", maxLines = 1)
                     }
                 }
 
@@ -587,7 +578,7 @@ fun VitaminItem(
                         onSave = {
                             val dosage = editedDosage.toIntOrNull() ?: 0
                             val dosageAmount = editedDosageAmount.toFloatOrNull() ?: 0f
-                            if (dosage > 0 && dosageAmount > 0) {
+                            if (dosage > 0 && dosageAmount > 0 && dosageAmount <= 30) {
                                 onDosageChange(dosage, dosageAmount, editedDosageUnit)
                                 isEditing = false
                             }

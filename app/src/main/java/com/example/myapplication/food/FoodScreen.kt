@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -271,24 +272,38 @@ fun FoodScreen(
                     }
                     Spacer(modifier = Modifier.height(FoodDimens.PaddingSmall))
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = FoodDimens.PaddingSmall),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
                         mealTypes.forEach { type ->
+                            val minWidth = when (type.length) {
+                                in 0..5 -> 80.dp
+                                in 6..8 -> 100.dp
+                                else -> 120.dp
+                            }
+
                             Button(
                                 onClick = { selectedMealType = type },
                                 modifier = Modifier
-                                    .weight(1f)
+                                    .widthIn(min = minWidth)
                                     .height(40.dp)
                                     .padding(horizontal = 4.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (selectedMealType == type) FoodColors.ButtonColor else FoodColors.SearchBackground
+                                    containerColor = if (selectedMealType == type)
+                                        FoodColors.ButtonColor
+                                    else
+                                        FoodColors.SearchBackground
                                 ),
-                                shape = RoundedCornerShape(8.dp)
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 4.dp)
                             ) {
                                 Text(
                                     text = type,
                                     fontSize = 12.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
                                     color = if (selectedMealType == type) Color.White else FoodColors.TextColor
                                 )
                             }
