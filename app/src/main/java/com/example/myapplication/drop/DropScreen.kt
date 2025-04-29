@@ -1,6 +1,7 @@
 package com.example.myapplication.drop
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -27,6 +28,7 @@ import androidx.core.content.edit
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.myapplication.profile.ProfileViewModel
+import com.example.myapplication.utils.TokenManager
 import kotlinx.coroutines.delay
 import java.lang.Math.*
 import java.time.LocalDate
@@ -48,11 +50,13 @@ fun DropScreen(
     val context = LocalContext.current
     val userResponse by profileViewModel.userResponse
     val errorMessage by profileViewModel.errorMessage
+    val currentToken = TokenManager.getToken(context)
 
     var weight by remember { mutableStateOf<Double?>(null) }
     var gender by remember { mutableStateOf<String?>(null) }
     var age by remember { mutableStateOf<Int?>(null) }
-    val height by remember { mutableStateOf<Int?>(null) }
+    var height by remember { mutableStateOf<Int?>(null) }
+    var lastToken by remember { mutableStateOf(currentToken) }
 
     LaunchedEffect(Unit) {
         profileViewModel.fetchUserInfo(context)
@@ -63,6 +67,7 @@ fun DropScreen(
             weight = it.weight
             gender = it.gender
             age = it.age
+            height = it.height?.toInt()
         }
     }
 
@@ -77,7 +82,9 @@ fun DropScreen(
 
     val maxWater = calculateWaterNorm(weight, gender, age, height)
 
-    val sharedPreferences = context.getSharedPreferences("WaterPrefs", Context.MODE_PRIVATE)
+    val sharedPreferences = remember {
+        context.getSharedPreferences("WaterPrefs_${currentToken ?: "default"}", Context.MODE_PRIVATE)
+    }
 
     var currentWater by remember {
         mutableIntStateOf(sharedPreferences.getInt("currentWater", 0))
@@ -98,13 +105,32 @@ fun DropScreen(
                 ?: LocalDate.now()
         )
     }
-    fun saveWaterData() {
+    fun saveWaterData(
+        sharedPreferences: SharedPreferences,
+        currentWater: Int,
+        waterPortions: List<Int>,
+        lastResetDate: LocalDate
+    ) {
         sharedPreferences.edit {
             putInt("currentWater", currentWater)
             putString("waterPortions", waterPortions.joinToString(","))
             putString("lastResetDate", lastResetDate.toString())
         }
     }
+    LaunchedEffect(currentToken) {
+        if (currentToken != lastToken) {
+            currentWater = 0
+            waterPortions = emptyList()
+            lastResetDate = LocalDate.now()
+            saveWaterData(sharedPreferences, currentWater, waterPortions, lastResetDate)
+            lastToken = currentToken
+        }
+    }
+
+    fun saveWaterData() {
+        saveWaterData(sharedPreferences, currentWater, waterPortions, lastResetDate)
+    }
+
     fun addWaterPortion(amount: Int) {
         currentWater += amount
         waterPortions = listOf(amount) + waterPortions
