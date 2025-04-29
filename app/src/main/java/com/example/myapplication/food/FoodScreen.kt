@@ -2,70 +2,23 @@ package com.example.myapplication.food
 
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.*
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.shape.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.*
+import androidx.compose.ui.draw.*
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.*
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -81,14 +34,20 @@ import java.util.Locale
  * Объект, содержащий цвета, используемые в экране выбора блюд.
  */
 object FoodColors {
-    val Background = Color(0xFF2E2A3B)
-    val CardBackground = Color(0xFF494358)
+    val Background = listOf(Color(0xFF45364c), Color(0xFF16101B), Color(0xFF2a1f33))
+    val CardBackground = Color(0xFF4A4458)
     val TextColor = Color.LightGray
     val TextSecondary = Color(0xFFB0B0B0)
-    val ButtonColor = Color(0xFF6A5ACD)
+    val ButtonColor = Color(0xFFFF5722)
     val SearchBackground = Color(0xFF5E566F)
-    val Accent = Color(0xFF00C4B4)
+    val Accent = Color(0xFFFF5722)
     val CustomDishIndicator = Color(0xFFAB47BC)
+
+    fun backgroundBrush() = Brush.radialGradient(
+        colors = Background,
+        center = androidx.compose.ui.geometry.Offset(0.05f, 0.05f),
+        radius = 1500f
+    )
 }
 
 /**
@@ -206,7 +165,7 @@ fun FoodScreen(
     }
 
     Scaffold(
-        modifier = Modifier.background(FoodColors.Background),
+        modifier = Modifier.background(FoodColors.backgroundBrush()),
         bottomBar = {
             Surface(
                 modifier = Modifier
@@ -236,7 +195,7 @@ fun FoodScreen(
                         NutrientTotal("У", totalNutrition.carbohydrates, "г")
                     }
                     Spacer(modifier = Modifier.height(FoodDimens.PaddingSmall))
-                    Button(
+                    OutlinedButton(
                         onClick = {
                             if (selectedDishes.isEmpty() && customDishes.isEmpty()) {
                                 Toast.makeText(context, "Выберите или добавьте блюдо", Toast.LENGTH_SHORT).show()
@@ -284,10 +243,31 @@ fun FoodScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(FoodDimens.ButtonHeight),
-                        colors = ButtonDefaults.buttonColors(containerColor = FoodColors.ButtonColor),
-                        shape = RoundedCornerShape(FoodDimens.CardCornerRadius)
+                        shape = RoundedCornerShape(FoodDimens.CardCornerRadius),
+                        border = BorderStroke(
+                            width = 1.dp,
+                            color = FoodColors.Accent
+                        ),
+                        enabled = selectedDishes.isNotEmpty() || customDishes.isNotEmpty()
                     ) {
-                        Text("Добавить в дневник", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Добавить",
+                                modifier = Modifier.size(18.dp),
+                                tint = FoodColors.Accent
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                "Добавить в дневник",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = FoodColors.Accent
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.height(FoodDimens.PaddingSmall))
                     Row(
@@ -321,7 +301,7 @@ fun FoodScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(FoodColors.Background)
+                .background(FoodColors.backgroundBrush())
                 .padding(paddingValues)
         ) {
             Row(
@@ -656,7 +636,11 @@ fun FoodScreen(
                             shape = RoundedCornerShape(FoodDimens.CardCornerRadius),
                             color = FoodColors.CardBackground
                         ) {
-                            Column(modifier = Modifier.padding(FoodDimens.PaddingMedium)) {
+                            Column(
+                                modifier = Modifier
+                                    .padding(FoodDimens.PaddingMedium)
+                                    .background(FoodColors.CardBackground, RoundedCornerShape(FoodDimens.CardCornerRadius))
+                            ) {
                                 var name by remember { mutableStateOf("") }
                                 var calories by remember { mutableIntStateOf(0) }
                                 var protein by remember { mutableIntStateOf(0) }
@@ -665,39 +649,80 @@ fun FoodScreen(
                                 OutlinedTextField(
                                     value = name,
                                     onValueChange = { name = it },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    label = { Text("Название блюда", color = FoodColors.TextSecondary) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = FoodDimens.PaddingSmall),
+                                    label = {
+                                        Text(
+                                            "Название блюда",
+                                            color = FoodColors.TextSecondary
+                                        )
+                                    },
                                     colors = TextFieldDefaults.colors(
-                                        focusedContainerColor = FoodColors.SearchBackground,
-                                        unfocusedContainerColor = FoodColors.SearchBackground,
-                                        focusedTextColor = Color.White,
-                                        unfocusedTextColor = Color.White,
-                                        focusedIndicatorColor = Color.Transparent,
-                                        unfocusedIndicatorColor = Color.Transparent,
+                                        focusedContainerColor = Color.Transparent,
+                                        unfocusedContainerColor = Color.Transparent,
+                                        focusedTextColor = FoodColors.TextColor,
+                                        unfocusedTextColor = FoodColors.TextColor,
+                                        focusedIndicatorColor = FoodColors.Accent,
+                                        unfocusedIndicatorColor = FoodColors.TextSecondary,
                                         cursorColor = FoodColors.Accent
                                     ),
-                                    singleLine = true
+                                    singleLine = true,
+                                    shape = RoundedCornerShape(FoodDimens.CardCornerRadius)
                                 )
-                                Spacer(modifier = Modifier.height(FoodDimens.PaddingSmall))
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceEvenly,
-                                    verticalAlignment = Alignment.CenterVertically
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = FoodDimens.PaddingSmall)
+                                        .background(
+                                            color = FoodColors.SearchBackground.copy(alpha = 0.3f),
+                                            shape = RoundedCornerShape(FoodDimens.CardCornerRadius)
+                                        )
+                                        .padding(FoodDimens.PaddingSmall),
+                                    horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
-                                    NutrientCounter("Калории", calories, { if (calories > 0) calories-- }, { calories++ }, "ккал")
-                                    NutrientCounter("Белки", protein, { if (protein > 0) protein-- }, { protein++ })
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceEvenly,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        NutrientCounter(
+                                            label = "Калории",
+                                            value = calories,
+                                            onDecrease = { if (calories > 0) calories-- },
+                                            onIncrease = { calories++ },
+                                            unit = "ккал",
+                                        )
+                                        NutrientCounter(
+                                            label = "Белки",
+                                            value = protein,
+                                            onDecrease = { if (protein > 0) protein-- },
+                                            onIncrease = { protein++ },
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(FoodDimens.PaddingSmall))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceEvenly,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        NutrientCounter(
+                                            label = "Жиры",
+                                            value = fat,
+                                            onDecrease = { if (fat > 0) fat-- },
+                                            onIncrease = { fat++ },
+                                        )
+                                        NutrientCounter(
+                                            label = "Углеводы",
+                                            value = carbs,
+                                            onDecrease = { if (carbs > 0) carbs-- },
+                                            onIncrease = { carbs++ },
+                                        )
+                                    }
                                 }
-                                Spacer(modifier = Modifier.height(FoodDimens.PaddingSmall))
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceEvenly,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    NutrientCounter("Жиры", fat, { if (fat > 0) fat-- }, { fat++ })
-                                    NutrientCounter("Углеводы", carbs, { if (carbs > 0) carbs-- }, { carbs++ })
-                                }
-                                Spacer(modifier = Modifier.height(FoodDimens.PaddingSmall))
-                                Button(
+
+                                OutlinedButton(
                                     onClick = {
                                         if (name.isBlank()) {
                                             Toast.makeText(context, "Укажите название блюда", Toast.LENGTH_SHORT).show()
@@ -712,11 +737,26 @@ fun FoodScreen(
                                             carbs = 0
                                         }
                                     },
-                                    modifier = Modifier.fillMaxWidth().height(FoodDimens.ButtonHeight),
-                                    colors = ButtonDefaults.buttonColors(containerColor = FoodColors.ButtonColor),
-                                    shape = RoundedCornerShape(FoodDimens.CardCornerRadius)
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(FoodDimens.ButtonHeight),
+                                    shape = RoundedCornerShape(FoodDimens.CardCornerRadius),
+                                    border = BorderStroke(1.dp, FoodColors.Accent),
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        contentColor = FoodColors.Accent
+                                    )
                                 ) {
-                                    Text("Добавить блюдо", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = "Добавить",
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        "Добавить блюдо",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
                                 }
                             }
                         }
@@ -972,7 +1012,7 @@ private fun NutrientCounter(
                 fontSize = 16.sp,
                 color = FoodColors.TextColor,
                 modifier = Modifier.width(60.dp),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                textAlign = TextAlign.Center
             )
             IconButton(
                 onClick = onIncrease,

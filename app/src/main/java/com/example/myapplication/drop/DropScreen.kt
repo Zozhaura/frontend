@@ -4,45 +4,31 @@ import android.content.Context
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.core.*
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.shape.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.*
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.*
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.*
 import androidx.core.content.edit
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.myapplication.profile.ProfileViewModel
 import kotlinx.coroutines.delay
+import java.lang.Math.*
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -66,7 +52,7 @@ fun DropScreen(
     var weight by remember { mutableStateOf<Double?>(null) }
     var gender by remember { mutableStateOf<String?>(null) }
     var age by remember { mutableStateOf<Int?>(null) }
-    var height by remember { mutableStateOf<Int?>(null) }
+    val height by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(Unit) {
         profileViewModel.fetchUserInfo(context)
@@ -92,8 +78,18 @@ fun DropScreen(
     val maxWater = calculateWaterNorm(weight, gender, age, height)
 
     val sharedPreferences = context.getSharedPreferences("WaterPrefs", Context.MODE_PRIVATE)
+
     var currentWater by remember {
-        mutableStateOf(sharedPreferences.getInt("currentWater", 0))
+        mutableIntStateOf(sharedPreferences.getInt("currentWater", 0))
+    }
+
+    var waterPortions by remember {
+        mutableStateOf(
+            sharedPreferences.getString("waterPortions", "")
+                ?.split(",")
+                ?.filter { it.isNotEmpty() }
+                ?.map { it.toInt() } ?: emptyList()
+        )
     }
 
     var lastResetDate by remember {
@@ -102,24 +98,43 @@ fun DropScreen(
                 ?: LocalDate.now()
         )
     }
-
-    fun saveWaterData(water: Int, resetDate: LocalDate) {
+    fun saveWaterData() {
         sharedPreferences.edit {
-            putInt("currentWater", water)
-            putString("lastResetDate", resetDate.toString())
+            putInt("currentWater", currentWater)
+            putString("waterPortions", waterPortions.joinToString(","))
+            putString("lastResetDate", lastResetDate.toString())
         }
     }
+    fun addWaterPortion(amount: Int) {
+        currentWater += amount
+        waterPortions = listOf(amount) + waterPortions
+        saveWaterData()
+    }
 
-    val coroutineScope = rememberCoroutineScope()
+    fun removeWaterPortion(index: Int) {
+        val portionToRemove = waterPortions[index]
+        currentWater = (currentWater - portionToRemove).coerceAtLeast(0)
+        waterPortions = waterPortions.toMutableList().apply { removeAt(index) }
+        saveWaterData()
+    }
+
+    fun resetDailyData() {
+        currentWater = 0
+        waterPortions = emptyList()
+        saveWaterData()
+    }
+
+
+
     LaunchedEffect(Unit) {
         while (true) {
             val now = LocalDateTime.now()
             val today = now.toLocalDate()
 
             if (lastResetDate != today) {
-                currentWater = 0
+                resetDailyData()
                 lastResetDate = today
-                saveWaterData(currentWater, lastResetDate)
+//                saveWaterData(currentWater, lastResetDate)
             }
 
             val secondsUntilNextMinute = 60 - now.second
@@ -127,24 +142,22 @@ fun DropScreen(
         }
     }
 
-    LaunchedEffect(currentWater) {
-        saveWaterData(currentWater, lastResetDate)
-    }
+    val (mainProgress, extraProgress) = if (maxWater > 0) {
+        when {
+            currentWater <= maxWater -> (currentWater.toFloat() / maxWater to 0f)
+            else -> (1f to (currentWater - maxWater).toFloat() / maxWater)
+        }
+    } else (0f to 0f)
 
-    val progressFirstRing = if (currentWater <= maxWater) {
-        (currentWater.toFloat() / maxWater).coerceIn(0f, 1f)
-    } else {
-        1f
-    }
+    val animatedMainProgress by animateFloatAsState(
+        targetValue = mainProgress,
+        animationSpec = spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessLow)
+    )
 
-    val excessWater = if (currentWater > maxWater) currentWater - maxWater else 0
-    val progressSecondRing = if (currentWater > maxWater) {
-        (excessWater.toFloat() / maxWater).coerceIn(0f, 1f)
-    } else {
-        0f
-    }
-
-    val remainingWater = if (currentWater < maxWater) maxWater - currentWater else 0
+    val animatedExtraProgress by animateFloatAsState(
+        targetValue = extraProgress,
+        animationSpec = spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessLow)
+    )
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -152,7 +165,7 @@ fun DropScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp),
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(
@@ -164,7 +177,7 @@ fun DropScreen(
                 modifier = Modifier.size(48.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.ArrowBack,
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back to home screen",
                     tint = Color(0x9AFFFFFF)
                 )
@@ -179,84 +192,97 @@ fun DropScreen(
         ) {
             Box(
                 modifier = Modifier
-                    .size(250.dp)
-                    .padding(bottom = 24.dp)
+                    .size(280.dp)
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(
                     progress = { 1f },
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .align(Alignment.Center),
-                    color = Color(0x90A4A4A4),
-                    strokeWidth = 4.dp,
+                    modifier = Modifier.fillMaxSize(),
+                    color = Color(0xFF3A3347),
+                    strokeWidth = 12.dp,
+                    trackColor = ProgressIndicatorDefaults.circularIndeterminateTrackColor,
                 )
 
                 CircularProgressIndicator(
-                    progress = { progressFirstRing },
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .align(Alignment.Center),
-                    color = Color(0xFFFFA500),
-                    strokeWidth = 8.dp,
+                    progress = { animatedMainProgress },
+                    modifier = Modifier.fillMaxSize(),
+                    color = Color(0xFF00BCD4),
+                    strokeWidth = 12.dp,
+                    trackColor = ProgressIndicatorDefaults.circularIndeterminateTrackColor,
+                    strokeCap = StrokeCap.Round,
                 )
-
-                if (progressSecondRing > 0f) {
+                if (currentWater > maxWater) {
                     CircularProgressIndicator(
-                        progress = { progressSecondRing },
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .align(Alignment.Center),
-                        color = Color(0xFF42A5F5),
-                        strokeWidth = 8.dp,
+                        progress = { animatedExtraProgress },
+                        modifier = Modifier.fillMaxSize(),
+                        color = Color(0xFFFF7043),
+                        strokeWidth = 12.dp,
+                        trackColor = ProgressIndicatorDefaults.circularIndeterminateTrackColor,
+                        strokeCap = StrokeCap.Round,
                     )
                 }
-
-                Column(
-                    modifier = Modifier.align(Alignment.Center),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Box(
+                    modifier = Modifier
+                        .size(220.dp)
+                        .clip(CircleShape),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "$currentWater мл",
-                        color = Color(0x9AFFFFFF),
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = if (currentWater <= maxWater) {
-                            "$remainingWater мл осталось"
-                        } else {
-                            "Норма выполнена! +$excessWater мл"
-                        },
-                        color = Color(0x9AFFFFFF),
-                        fontSize = 16.sp
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Норма: $maxWater мл",
-                        color = Color(0x9AFFFFFF),
-                        fontSize = 14.sp
-                    )
+                    if (currentWater > 0) {
+                        WaterWaveAnimation(
+                            progress = minOf(animatedMainProgress + animatedExtraProgress, 1f),
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "$currentWater мл",
+                            color = Color.White,
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = if (currentWater >= maxWater) {
+                                "Цель достигнута! 🎉"
+                            } else {
+                                "Осталось: ${maxWater - currentWater} мл"
+                            },
+                            color = Color(0x9AFFFFFF),
+                            fontSize = 16.sp
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Норма: $maxWater мл",
+                            color = Color(0xFFA0A0A0),
+                            fontSize = 14.sp
+                        )
+                    }
                 }
             }
 
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                shape = RoundedCornerShape(16.dp),
-                color = Color(0xFF494358)
+                    .padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(24.dp),
+                color = Color(0xFF3A3347),
+                shadowElevation = 8.dp
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                    modifier = Modifier.padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
                         text = "Выберите объем порции",
                         color = Color(0x9AFFFFFF),
-                        fontSize = 18.sp
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(bottom = 8.dp)
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -265,34 +291,119 @@ fun DropScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        WaterButton("50 мл") {
-                            currentWater += 50
-                        }
-                        WaterButton("100 мл") {
-                            currentWater += 100
-                        }
-                        WaterButton("150 мл") {
-                            currentWater += 150
-                        }
+                        WaterButton(amount = 50, onClick = { addWaterPortion(50) })
+                        WaterButton(amount = 100, onClick = { addWaterPortion(100) })
+                        WaterButton(amount = 150, onClick = { addWaterPortion(150) })
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        WaterButton("200 мл") {
-                            currentWater += 200
-                        }
-                        WaterButton("250 мл") {
-                            currentWater += 250
-                        }
-                        WaterButton("300 мл") {
-                            currentWater += 300
+                        WaterButton(amount = 200, onClick = { addWaterPortion(200) })
+                        WaterButton(amount = 250, onClick = { addWaterPortion(250) })
+                        WaterButton(amount = 300, onClick = { addWaterPortion(300) })
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedButton(
+                        onClick = { resetDailyData() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 32.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = Color(0xFFFF6E6E),
+                            containerColor = Color.Transparent
+                        ),
+                        border = BorderStroke(1.dp, Color(0xFFFF6E6E))
+                    ) {
+                        Text(
+                            text = "Сбросить за сегодня",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+            if (waterPortions.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color(0xFF494358),
+                    border = BorderStroke(1.dp, Color(0xFF6650a4))
+                ) {
+                    Column(
+                        modifier = Modifier.padding(12.dp)
+                    ) {
+                        Text(
+                            text = "Добавленная вода",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+
+                        LazyColumn(
+                            modifier = Modifier.heightIn(max = 200.dp)
+                        ) {
+                            itemsIndexed(waterPortions) { index, portion ->
+                                WaterPortionItem(
+                                    amount = portion,
+                                    onRemove = { removeWaterPortion(index) },
+                                    modifier = Modifier.padding(vertical = 4.dp)
+                                )
+                            }
                         }
                     }
                 }
+            }
+        }
+    }
+}
+/**
+ * Отображает элемент списка добавленных порций воды.
+ *
+ * @param amount Объем добавленной воды в мл.
+ * @param onRemove Callback, вызываемый при удалении порции.
+ * @param modifier Modifier для настройки внешнего вида элемента.
+ */
+
+@Composable
+private fun WaterPortionItem(
+    amount: Int,
+    onRemove: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        color = Color(0xFF5E4D7A)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "$amount мл",
+                color = Color.White,
+                fontSize = 16.sp
+            )
+
+            IconButton(
+                onClick = onRemove,
+                modifier = Modifier.size(24.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Удалить",
+                    tint = Color(0xFFFF6E6E)
+                )
             }
         }
     }
@@ -305,15 +416,86 @@ fun DropScreen(
  * @param onClick Callback, вызываемый при нажатии на кнопку.
  */
 @Composable
-fun WaterButton(text: String, onClick: () -> Unit) {
+private fun WaterButton(amount: Int, onClick: () -> Unit) {
+    val buttonColors = ButtonDefaults.buttonColors(
+        containerColor = Color(0xFF6650a4),
+        contentColor = Color.White
+    )
     Button(
         onClick = onClick,
         modifier = Modifier
-            .width(100.dp)
-            .padding(8.dp),
-        shape = RoundedCornerShape(8.dp)
+            .height(60.dp)
+            .width(100.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = buttonColors,
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = 4.dp,
+            pressedElevation = 2.dp,
+            disabledElevation = 0.dp
+        ),
+        border = BorderStroke(
+            width = 1.dp,
+            color = Color(0xFF896BDA)
+        ),
+        contentPadding = PaddingValues(8.dp)
     ) {
-        Text(text = text)
+        Text(
+            text = "$amount мл",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+/**
+ * Отображает анимацию волн воды внутри кругового индикатора.
+ *
+ * @param progress Текущий прогресс заполнения (0..1).
+ * @param modifier Modifier для настройки внешнего вида анимации.
+ */
+@Composable
+private fun WaterWaveAnimation(progress: Float, modifier: Modifier = Modifier) {
+    val infiniteTransition = rememberInfiniteTransition()
+    val waveOffset by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        )
+    )
+
+    Canvas(modifier = modifier) {
+        val height = size.height * (1 - progress)
+        val waveHeight = 10f
+        val waveLength = size.width * 2
+
+        drawRect(
+            color = Color(0x3B42A5F5),
+            size = Size(size.width, size.height),
+            topLeft = Offset(0f, height)
+        )
+
+        val path = Path().apply {
+            moveTo(0f, height)
+
+            for (x in 0..size.width.toInt() step 10) {
+                val y =
+                    height + kotlin.math.sin((x.toFloat() / waveLength * 2 * PI).toFloat() + waveOffset * 2 * PI) * waveHeight
+                lineTo(x.toFloat(), y.toFloat())
+            }
+
+            lineTo(size.width, size.height)
+            lineTo(0f, size.height)
+            close()
+        }
+
+        drawPath(
+            path = path,
+            color = Color(0x5442A5F5)
+        )
     }
 }
 
