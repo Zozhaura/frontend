@@ -48,11 +48,12 @@ object ProfileColors {
     val CardBackground = Color(0xFF3A3347)
     val TextColor = Color.LightGray
     val White = Color.White
-    val AccentColor = Color(0xFFFF5722)
-    val SecondaryBackground = Color(0x2ABD3300)
-    val ErrorColor = Color(0xFFFF2922)
+    val AccentColor = Color(0x8AFF5722)
+    val SecondaryBackground = Color(0xFF443B52)
+    val SaveButton = Color(0xFFFF5722)
+    val ErrorColor = Color(0xFFFF0700)
     val LoadingColor = Color(0xFFBB86FC)
-    val BorderColor = Color(0xFFFF5722)
+    val BorderColor = Color(0xFF70658F)
     val ButtonContent = Color.White
 }
 
@@ -340,7 +341,7 @@ fun ProfileScreen(
                                 .fillMaxWidth()
                                 .height(ProfileDimens.ButtonHeight),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = ProfileColors.AccentColor,
+                                containerColor = ProfileColors.SaveButton,
                                 contentColor = ProfileColors.ButtonContent
                             ),
                             shape = RoundedCornerShape(ProfileDimens.CardCornerRadius),
@@ -375,9 +376,9 @@ fun ProfileScreen(
                                 .height(ProfileDimens.ButtonHeight),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 containerColor = Color.Transparent,
-                                contentColor = ProfileColors.ErrorColor
+                                contentColor = ProfileColors.SaveButton
                             ),
-                            border = BorderStroke(1.dp, ProfileColors.ErrorColor),
+                            border = BorderStroke(1.dp, ProfileColors.SaveButton),
                             shape = RoundedCornerShape(ProfileDimens.CardCornerRadius)
                         ) {
                             Text(
