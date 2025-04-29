@@ -1,25 +1,58 @@
 package com.example.myapplication.step
 
+import android.content.Context
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.ProgressIndicatorDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.*
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import java.time.LocalDate
@@ -28,6 +61,7 @@ import java.time.LocalDate
  * Экран для отображения прогресса шагов и потраченных калорий.
  *
  * Показывает текущий прогресс шагов, позволяет выбрать цель и добавлять шаги вручную.
+ * Цель сохраняется в SharedPreferences, чтобы не сбрасываться при выходе.
  *
  * @param navController Контроллер навигации для перехода между экранами.
  * @param viewModel ViewModel для управления данными шагов и калорий.
@@ -39,9 +73,20 @@ fun StepScreen(
     viewModel: StepViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val sharedPreferences = context.getSharedPreferences("step_prefs", Context.MODE_PRIVATE)
+
+    // Загружаем цель из SharedPreferences, по умолчанию 10000
+    var maxSteps by remember {
+        mutableStateOf(sharedPreferences.getInt("max_steps", 10000))
+    }
+
+    // Сохраняем цель при изменении
+    LaunchedEffect(maxSteps) {
+        sharedPreferences.edit().putInt("max_steps", maxSteps).apply()
+    }
+
     val currentSteps = viewModel.stepsState.collectAsState()
     val currentCalories = viewModel.caloriesState.collectAsState()
-    var maxSteps by remember { mutableStateOf(10000) }
     val currentDate = remember { mutableStateOf(LocalDate.now()) }
 
     LaunchedEffect(Unit) {
